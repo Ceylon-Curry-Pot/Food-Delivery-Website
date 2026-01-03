@@ -1,4 +1,4 @@
-export function Hero() {
+export default function Hero() {
   return (
     <section id="home" className="relative bg-gradient-to-br from-red-50 to-white overflow-hidden">
       {/* Background Video/Image */}

@@ -4,7 +4,7 @@ type FooterProps = {
   onStaffPortalClick?: () => void;
 };
 
-export function Footer({ onStaffPortalClick }: FooterProps) {
+export default function Footer({ onStaffPortalClick }: FooterProps) {
   return (
     <footer className="bg-gray-900 text-gray-300">
       {/* Decorative pattern accent bar */}
@@ -57,15 +57,15 @@ export function Footer({ onStaffPortalClick }: FooterProps) {
           <div>
             <h3 className="text-white mb-4">Opening Hours</h3>
             <ul className="space-y-2 text-sm">
-              <li className="flex justify-between">
+              <li className="flex gap-4">
                 <span>Monday - Friday</span>
                 <span>10am - 10pm</span>
               </li>
-              <li className="flex justify-between">
+              <li className="flex gap-16">
                 <span>Saturday</span>
                 <span>10am - 11pm</span>
               </li>
-              <li className="flex justify-between">
+              <li className="flex gap-18.5">
                 <span>Sunday</span>
                 <span>11am - 9pm</span>
               </li>
