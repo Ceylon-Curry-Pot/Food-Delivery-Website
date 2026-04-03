@@ -4,9 +4,9 @@ export type NavLink = {
 }
 
 export const links: NavLink[] =[
-  { href: '/home', label: 'Home' },
-  { href: '/about', label: 'About' },
+  { href: '/utils/links.ts', label: 'Home' },
   { href: '/menu', label: 'Menu' },
   { href: '/tracker', label: 'Tracker' },
+  { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ]
