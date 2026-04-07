@@ -5,7 +5,7 @@ import { ShoppingCart } from 'lucide-react';
 import type { DishCardProps } from '@/components/home/DishCard';
 
 type Props = DishCardProps & {
-  onAdd?: (id: string) => void;
+  onAdd?: (dish: DishCardProps) => void;
 };
 
 export default function MenuDishCard({
@@ -54,7 +54,16 @@ export default function MenuDishCard({
         </ul>
 
         <button
-          onClick={() => onAdd?.(id)}
+          onClick={() =>
+            onAdd?.({
+              id,
+              name,
+              description,
+              price,
+              image,
+              badge,
+            })
+          }
           className="mt-auto w-full flex items-center justify-center gap-2 bg-red-600 text-white px-4 py-3 rounded-full text-sm font-semibold
                      hover:bg-red-700 active:scale-[0.99] transition-all duration-200 shadow-sm hover:shadow-md"
         >

@@ -1,27 +1,32 @@
-import Link from 'next/link';
-import { Button } from '../ui/button';
-import { ShoppingCart as LuShoppingCart } from 'lucide-react';
-// import { LuShoppingCart } from 'react-icons/lu';
+'use client';
 
-// import { fetchCartItems } from '@/utils/actions';
-function CartButton() {
-//   const numItemsInCart = await fetchCartItems();
-const numItemsInCart = 3; // Placeholder value
+import { ShoppingCart } from 'lucide-react';
+import { useCartStore } from '../global/useCartStore';
+
+type Props = {
+  onClick: () => void;
+};
+
+export default function CartButton({ onClick }: Props) {
+  const items = useCartStore((state) => state.items);
+
+  const totalItems = items.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
 
   return (
-    <Button
-      asChild
-      variant='outline'
-      size='icon'
-      className='flex justify-center items-center relative'
+    <button
+      onClick={onClick}
+      className="relative flex items-center justify-center w-11 h-11 rounded-full border border-gray-200 hover:border-red-300 hover:text-red-600 transition-all"
     >
-      <Link href='/cart'>
-        <LuShoppingCart />
-        <span className='absolute -top-3 -right-3 bg-primary text-white rounded-full h-6 w-6 flex items-center justify-center text-xs'>
-          {numItemsInCart}
+      <ShoppingCart className="w-5 h-5" />
+
+      {totalItems > 0 && (
+        <span className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-[10px] font-semibold shadow-sm">
+          {totalItems}
         </span>
-      </Link>
-    </Button>
+      )}
+    </button>
   );
 }
-export default CartButton;

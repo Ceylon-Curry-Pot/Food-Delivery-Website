@@ -6,11 +6,20 @@ import SectionHeader from '@/components/home/SectionHeader';
 import MenuFilters from './MenuFilters';
 import MenuGrid from './MenuGrid';
 import { featuredDishes } from '@/lib/data';
-import { getDishCategory, menuCategories, type MenuCategory } from '@/lib/menu';
+import {
+  getDishCategory,
+  menuCategories,
+  type MenuCategory,
+} from '@/lib/menu';
+import { useCartStore } from '@/components/global/useCartStore';
+import type { DishCardProps } from '@/components/home/DishCard';
 
 export default function MenuSection() {
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState<MenuCategory>('All');
+  const [activeCategory, setActiveCategory] =
+    useState<MenuCategory>('All');
+
+  const addItem = useCartStore((state) => state.addItem);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -30,8 +39,13 @@ export default function MenuSection() {
     });
   }, [search, activeCategory]);
 
-  const handleAdd = (id: string) => {
-    console.log('Add to cart:', id);
+  const handleAdd = (dish: DishCardProps) => {
+    addItem({
+      id: dish.id,
+      name: dish.name,
+      price: dish.price,
+      image: dish.image,
+    });
   };
 
   return (
