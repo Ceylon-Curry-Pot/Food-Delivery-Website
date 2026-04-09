@@ -5,6 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-brand: #DC2626;
+  --color-brand-hover: #B91C1C;
+  --color-page: #F9FAFB;
+  --color-card-bg: #FFFFFF;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
