@@ -1,4 +1,6 @@
+'use client';
 import { Phone, Mail, MapPin, Facebook, Instagram, Twitter } from 'lucide-react';
+import { redirect } from 'next/navigation';
 
 type FooterProps = {
   onStaffPortalClick?: () => void;
@@ -97,7 +99,7 @@ export default function Footer({ onStaffPortalClick }: FooterProps) {
           <p>© 2024 Ceylon Curry Pot. All rights reserved.</p>
           <div className="mt-4 sm:mt-0">
             <button
-              onClick={onStaffPortalClick}
+              onClick={onStaffPortalClick ? onStaffPortalClick : () => redirect('/admin')}
               className="text-gray-500 hover:text-red-500 transition-colors text-xs"
             >
               Staff Portal
