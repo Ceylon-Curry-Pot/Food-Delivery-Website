@@ -1,3 +1,5 @@
+'use client';
+
 import { Bike, Store } from 'lucide-react';
 import { OrderType } from './cart.types';
 
@@ -7,43 +9,28 @@ type Props = {
 };
 
 export default function OrderTypeSelector({ value, onChange }: Props) {
-  const options = [
-    {
-      key: 'delivery' as const,
-      label: 'Delivery',
-      icon: Bike,
-    },
-    {
-      key: 'pickup' as const,
-      label: 'Pick-Up',
-      icon: Store,
-    },
-  ];
-
-   return (
-    <div className="grid grid-cols-2 gap-4">
-      {options.map((option) => {
-        const Icon = option.icon;
-        const active = value === option.key;
-
+  return (
+    <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+      {([
+        { key: 'delivery' as const, label: 'Delivery', icon: Bike },
+        { key: 'pickup'   as const, label: 'Pick-Up',  icon: Store },
+      ]).map(({ key, label, icon: Icon }) => {
+        const active = value === key;
         return (
           <button
-            key={option.key}
-            onClick={() => onChange(option.key)}
-            className={`rounded-2xl border p-4 flex flex-col items-center justify-center gap-3 transition-all
-              ${
-                active
-                  ? 'bg-red-600 text-white border-red-600 shadow-lg'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-red-300'
+            key={key}
+            onClick={() => onChange(key)}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all duration-200
+              ${active
+                ? 'bg-red-600 text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
               }`}
           >
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center ${active ? 'bg-white/20' : 'bg-red-50'}`}>
-              <Icon className="w-7 h-7" />
-            </div>
-            <span className="font-semibold">{option.label}</span>
+            <Icon className="w-4 h-4" />
+            {label}
           </button>
         );
       })}
     </div>
-    );
+  );
 }
