@@ -1,11 +1,18 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X, ShoppingBag } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import OrderTypeSelector from './OrderTypeSelector';
 import CartItemRow from './CartItemRow';
 import OrderNote from './OrderNote';
 import CartSummary from './CartSummary';
-import { useCartStore } from '../global/useCartStore';
+import {
+  useCartStore,
+  selectSubtotal,
+  selectDeliveryFee,
+  selectTotal,
+  selectTotalItems,
+} from '../global/useCartStore';
 
 type Props = {
   isOpen: boolean;
@@ -13,66 +20,84 @@ type Props = {
 };
 
 export default function CartModal({ isOpen, onClose }: Props) {
-  const {
-    items,
-    note,
-    orderType,
-    subtotal,
-    deliveryFee,
-    total,
-    setNote,
-    setOrderType,
-    increaseQty,
-    decreaseQty,
-    removeItem,
-  } = useCartStore();
+  const items        = useCartStore((s) => s.items);
+  const note         = useCartStore((s) => s.note);
+  const orderType    = useCartStore((s) => s.orderType);
+  const setNote      = useCartStore((s) => s.setNote);
+  const setOrderType = useCartStore((s) => s.setOrderType);
+  const increaseQty  = useCartStore((s) => s.increaseQty);
+  const decreaseQty  = useCartStore((s) => s.decreaseQty);
+  const removeItem   = useCartStore((s) => s.removeItem);
 
-  if (!isOpen) return null;
+  const subtotal    = useCartStore(selectSubtotal);
+  const deliveryFee = useCartStore(selectDeliveryFee);
+  const total       = useCartStore(selectTotal);
+  const totalItems  = useCartStore(selectTotalItems);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-3xl">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Your Basket
-          </h2>
-
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          />
+
+          {/* Drawer */}
+          <motion.div
+            key="drawer"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[420px] bg-white shadow-2xl flex flex-col"
           >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-8">
-          {/* Order Type */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-4">
-              Order Type
-            </h3>
-            <OrderTypeSelector
-              value={orderType}
-              onChange={setOrderType}
-            />
-          </div>
-
-          {/* Items */}
-          <div>
-            <h3 className="font-semibold text-gray-900 mb-4">
-              Items
-            </h3>
-
-            {items.length === 0 ? (
-              <div className="text-center py-10 border rounded-2xl bg-gray-50">
-                <p className="text-gray-500">
-                  Your basket is empty
-                </p>
+            {/* ── Header ── */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
+                  <ShoppingBag className="w-4 h-4 text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-900 leading-none">Your Basket</h2>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {totalItems > 0
+                      ? `${totalItems} item${totalItems > 1 ? 's' : ''}`
+                      : 'Empty'}
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {items.map((item) => (
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-all"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* ── Order type (compact pill) ── */}
+            <div className="px-5 py-3 border-b border-gray-100 flex-shrink-0">
+              <OrderTypeSelector value={orderType} onChange={setOrderType} />
+            </div>
+
+            {/* ── Items (scrollable — gets all remaining height) ── */}
+            <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2.5 min-h-0">
+              {items.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-16">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                    <ShoppingBag className="w-7 h-7 text-gray-300" />
+                  </div>
+                  <p className="font-semibold text-gray-500 text-sm mb-1">Your basket is empty</p>
+                  <p className="text-xs text-gray-400">Add some dishes to get started</p>
+                </div>
+              ) : (
+                items.map((item) => (
                   <CartItemRow
                     key={item.id}
                     item={item}
@@ -80,22 +105,20 @@ export default function CartModal({ isOpen, onClose }: Props) {
                     onDecrease={decreaseQty}
                     onRemove={removeItem}
                   />
-                ))}
+                ))
+              )}
+            </div>
+
+            {/* ── Footer: note + summary (pinned bottom) ── */}
+            {items.length > 0 && (
+              <div className="flex-shrink-0 border-t border-gray-100 px-5 pb-5 pt-3 space-y-3 bg-white">
+                <OrderNote note={note} onChange={setNote} />
+                <CartSummary subtotal={subtotal} deliveryFee={deliveryFee} total={total} />
               </div>
             )}
-          </div>
-
-          {/* Order Note */}
-          <OrderNote note={note} onChange={setNote} />
-
-          {/* Summary */}
-          <CartSummary
-            subtotal={subtotal}
-            deliveryFee={deliveryFee}
-            total={total}
-          />
-        </div>
-      </div>
-    </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
