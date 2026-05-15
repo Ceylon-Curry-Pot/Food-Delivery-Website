@@ -3,6 +3,7 @@
 import { Menu } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { links, NavLink } from '@/utils/links';
@@ -22,15 +23,27 @@ export default function Navbar() {
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-red-500 rounded-full flex items-center justify-center shadow-md">
-                <span className="text-2xl">🍛</span>
-              </div>
+              {/*Logo Image */}
+                <div className="relative w-14 h-14 rounded-full overflow-hidden shadow-md border border-red-100">
+                  <Image
+                    src="/CCP-logo.png"
+                    alt="Ceylon Curry Pot Logo"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                </div>
 
-              <div className="hidden sm:block">
-                <h1 className="text-2xl text-red-600 leading-tight">
-                  Ceylon Curry Pot
-                </h1>
-              </div>
+                {/* Brand Name */}
+                <div className="hidden sm:block">
+                  <h1 className="text-2xl font-bold text-red-600 leading-tight">
+                    Ceylon Curry Pot
+                  </h1>
+
+                  <p className="text-xs tracking-[0.2em] uppercase text-gray-500">
+                    Authentic Sri Lankan Cuisine
+                  </p>
+                </div>
             </Link>
 
             {/* Desktop Navigation */}
