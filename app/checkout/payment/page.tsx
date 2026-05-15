@@ -5,22 +5,23 @@ import OrderSummaryCard from '@/components/checkout/OrderSummaryCard';
 
 export default function PaymentPage() {
   return (
-    <main className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 grid lg:grid-cols-[1fr_380px] gap-8">
-        <section className="space-y-6">
-          <CheckoutHeader
-            backHref="/checkout"
-            title="Payment"
-            subtitle="Choose your payment method"
-          />
+    <main className="min-h-screen bg-gray-50 py-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
+          <section className="space-y-5">
+            <CheckoutHeader
+              backHref="/checkout"
+              title="Payment"
+              subtitle="Choose how you'd like to pay"
+            />
+            <PaymentMethodSelector />
+            <CardDetailsForm />
+          </section>
 
-          <PaymentMethodSelector />
-          <CardDetailsForm />
-        </section>
-
-        <aside>
-          <OrderSummaryCard buttonText="Pay Rs. 3,700" href="/checkout/success" />
-        </aside>
+          <aside>
+            <OrderSummaryCard buttonText="Place Order →" href="/checkout/success" />
+          </aside>
+        </div>
       </div>
     </main>
   );
