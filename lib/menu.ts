@@ -1,36 +1,37 @@
-// lib/menu.ts
 import type { DishCardProps } from '@/components/home/DishCard';
 
 export type MenuCategory =
   | 'All'
-  | "Rice & Curry"
-  | 'Fried Rice'
+  | 'Rice & Curry'
   | 'Kottu'
   | 'Biriyani'
-  | 'Seafood'
   | 'Hoppers'
-  | 'Beverages';
+  | 'Seafood'
+  | 'Vegetarian';
 
 export const menuCategories: MenuCategory[] = [
   'All',
   'Rice & Curry',
-  'Fried Rice',
   'Kottu',
   'Biriyani',
-  'Seafood',
   'Hoppers',
-  'Beverages',
+  'Seafood',
+  'Vegetarian',
 ];
 
-// Map dish id -> category
 export const dishCategoryById: Record<string, Exclude<MenuCategory, 'All'>> = {
   'red-pork-yellow-rice': 'Rice & Curry',
   'black-pork-white-rice': 'Rice & Curry',
   'chicken-biryani': 'Biriyani',
-  'veggie-kottu': 'Kottu',
+  'veggie-kottu': 'Vegetarian',
+  'chicken-kottu': 'Kottu',
+  'beef-kottu': 'Kottu',
+  'egg-hoppers': 'Hoppers',
+  'fish-curry-rice': 'Seafood',
+  'lamprais': 'Rice & Curry',
+  'pol-sambol-rice': 'Vegetarian',
 };
 
-// helper (safe default)
-export function getDishCategory(dish: DishCardProps) {
+export function getDishCategory(dish: DishCardProps): Exclude<MenuCategory, 'All'> {
   return dishCategoryById[dish.id] ?? 'Rice & Curry';
 }
