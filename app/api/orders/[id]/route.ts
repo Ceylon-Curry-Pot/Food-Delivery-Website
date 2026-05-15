@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
+import mongoose from 'mongoose';
 
-// GET /api/orders/:id — full order detail
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     await connectToDatabase();
-    const order = await Order.findById(params.id).populate('items.menuItem').lean();
+
+    // Support both MongoDB _id and human-readable orderNumber (e.g. CEY123456)
+    const isObjectId = mongoose.Types.ObjectId.isValid(params.id);
+    const order = isObjectId
+      ? await Order.findById(params.id).lean()
+      : await Order.findOne({ orderNumber: params.id }).lean();
+
     if (!order) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }
@@ -20,22 +26,17 @@ export async function GET(
   }
 }
 
-// PATCH /api/orders/:id — update any order field(s)
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
     const body = await req.json();
-
-    // Whitelist of updatable fields
-    const allowedFields = ['status', 'type', 'deliveryAddress', 'customer', 'items', 'total'];
+    const allowedFields = ['status', 'type', 'deliveryAddress', 'customer', 'items', 'total', 'note', 'paymentMethod'];
     const updateData: Record<string, unknown> = {};
 
     for (const key of allowedFields) {
-      if (key in body) {
-        updateData[key] = body[key];
-      }
+      if (key in body) updateData[key] = body[key];
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -53,7 +54,6 @@ export async function PATCH(
     if (!updated) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }
-
     return NextResponse.json(updated);
   } catch (error) {
     console.error('[PATCH /api/orders/:id]', error);
