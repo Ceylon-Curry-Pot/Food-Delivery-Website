@@ -1,16 +1,20 @@
 'use client';
 
 import DishCard from './DishCard';
-import { featuredDishes } from '@/lib/data';
 import SectionHeader from './SectionHeader';
 import { useCartStore } from '@/components/global/useCartStore';
 import Link from 'next/link';
+import type { MenuDish } from '@/lib/menu';
 
-export default function FeaturedDishes() {
+type Props = {
+  dishes: MenuDish[];
+};
+
+export default function FeaturedDishes({ dishes }: Props) {
   const addItem = useCartStore((state) => state.addItem);
 
   const handleAddToCart = (id: string) => {
-    const dish = featuredDishes.find((d) => d.id === id);
+    const dish = dishes.find((d) => d.id === id);
     if (!dish) return;
     addItem({
       id: dish.id,
@@ -29,11 +33,18 @@ export default function FeaturedDishes() {
           description="Discover our most popular Sri Lankan specialties, loved by customers across the island"
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {featuredDishes.slice(0, 4).map((dish) => (
-            <DishCard key={dish.id} {...dish} onAdd={handleAddToCart} />
-          ))}
-        </div>
+        {dishes.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {dishes.slice(0, 4).map((dish) => (
+              <DishCard key={dish.id} {...dish} onAdd={handleAddToCart} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
+            <p className="text-sm font-semibold text-gray-700">No featured dishes available</p>
+            <p className="mt-1 text-sm text-gray-400">Add available menu items in the admin dashboard.</p>
+          </div>
+        )}
 
         <div className="text-center mt-14">
           <Link

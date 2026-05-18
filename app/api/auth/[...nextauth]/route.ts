@@ -1,10 +1,16 @@
 import NextAuth from "next-auth";
+import type { AuthOptions, DefaultSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import bcrypt from "bcryptjs";
 
-export const authOptions = {
+type AppUser = {
+  id?: string;
+  role?: string;
+};
+
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -43,15 +49,17 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as any).role;
-        token.id = (user as any).id;
+        const appUser = user as AppUser;
+        token.role = appUser.role;
+        token.id = appUser.id;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).role = token.role;
-        (session.user as any).id = token.id;
+        const sessionUser = session.user as DefaultSession["user"] & AppUser;
+        sessionUser.role = token.role as string | undefined;
+        sessionUser.id = token.id as string | undefined;
       }
       return session;
     }
@@ -83,4 +91,3 @@ export const authOptions = {
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
-

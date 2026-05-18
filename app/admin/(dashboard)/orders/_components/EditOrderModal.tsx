@@ -92,7 +92,7 @@ export default function EditOrderModal({ order, isOpen, onClose, onSuccess, menu
     setFormData({ ...formData, items: newItems });
   };
 
-  const statuses = ['pending', 'preparing', 'ready', 'out_for_delivery', 'completed', 'cancelled'];
+  const statuses = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

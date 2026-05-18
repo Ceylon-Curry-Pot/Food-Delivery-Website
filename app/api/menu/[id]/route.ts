@@ -6,9 +6,10 @@ import { revalidatePath } from 'next/cache';
 // PATCH /api/menu/:id — update menu item fields
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
 
     const allowedFields = ['name', 'price', 'category', 'description', 'available', 'image'];
@@ -27,7 +28,7 @@ export async function PATCH(
     await connectToDatabase();
 
     const updated = await MenuItem.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: updateData },
       { new: true, runValidators: true }
     ).lean();
@@ -50,12 +51,13 @@ export async function PATCH(
 // DELETE /api/menu/:id — delete menu item
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectToDatabase();
 
-    const deletedItem = await MenuItem.findByIdAndDelete(params.id).lean();
+    const deletedItem = await MenuItem.findByIdAndDelete(id).lean();
 
     if (!deletedItem) {
       return NextResponse.json({ message: 'Menu item not found' }, { status: 404 });

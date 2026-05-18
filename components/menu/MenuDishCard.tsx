@@ -2,10 +2,10 @@
 'use client';
 
 import { ShoppingCart } from 'lucide-react';
-import type { DishCardProps } from '@/components/home/DishCard';
+import type { MenuDish } from '@/lib/menu';
 
-type Props = DishCardProps & {
-  onAdd?: (dish: DishCardProps) => void;
+type Props = MenuDish & {
+  onAdd?: (dish: MenuDish) => void;
 };
 
 export default function MenuDishCard({
@@ -15,6 +15,7 @@ export default function MenuDishCard({
   price,
   image,
   badge,
+  category,
   onAdd,
 }: Props) {
   return (
@@ -61,6 +62,7 @@ export default function MenuDishCard({
               description,
               price,
               image,
+              category,
               badge,
             })
           }

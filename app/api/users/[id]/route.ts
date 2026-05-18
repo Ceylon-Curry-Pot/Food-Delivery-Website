@@ -4,13 +4,14 @@ import User from "@/lib/models/User";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const { approved } = body;
 
-    const updateData: any = {};
+    const updateData: { approved?: boolean; approvedAt?: Date } = {};
     if (approved === true) {
       updateData.approved = true;
       updateData.approvedAt = new Date();
@@ -23,7 +24,7 @@ export async function PATCH(
     await connectToDatabase();
     
     const updatedUser = await User.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: updateData },
       { new: true }
     ).lean();
@@ -40,12 +41,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await connectToDatabase();
-    const deletedUser = await User.findByIdAndDelete(params.id).lean();
+    const deletedUser = await User.findByIdAndDelete(id).lean();
 
     if (!deletedUser) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });

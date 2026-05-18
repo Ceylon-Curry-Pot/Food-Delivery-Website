@@ -1,7 +1,25 @@
 import MenuHero from '@/components/menu/MenuHero';
 import MenuSection from '@/components/menu/MenuSection';
+import connectToDatabase from '@/lib/mongodb';
+import MenuItem from '@/lib/models/MenuItem';
+import { toMenuDish, type MenuItemRecord } from '@/lib/menu';
 
-export default function MenuPage() {
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+async function getMenuDishes() {
+  await connectToDatabase();
+
+  const items = await MenuItem.find({ available: true })
+    .sort({ category: 1, name: 1 })
+    .lean();
+
+  return items.map((item) => toMenuDish(item as MenuItemRecord));
+}
+
+export default async function MenuPage() {
+  const dishes = await getMenuDishes();
+
   return (
     <main className="bg-gray-50 min-h-screen">
       <MenuHero />
@@ -9,7 +27,7 @@ export default function MenuPage() {
       <section className="relative -mt-14 z-10 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-10">
-            <MenuSection />
+            <MenuSection dishes={dishes} />
           </div>
         </div>
       </section>

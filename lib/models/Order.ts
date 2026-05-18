@@ -9,6 +9,13 @@ export type OrderStatus =
   | 'cancelled';
 
 export type OrderType = 'delivery' | 'pickup';
+export type PaymentStatus =
+  | 'unpaid'
+  | 'pending'
+  | 'paid'
+  | 'failed'
+  | 'cancelled'
+  | 'charged_back';
 
 export interface IOrderItem {
   menuItem: mongoose.Types.ObjectId;
@@ -32,6 +39,11 @@ export interface IOrder extends Document {
   status: OrderStatus;
   note?: string;
   paymentMethod?: string;
+  paymentStatus: PaymentStatus;
+  payherePaymentId?: string;
+  payhereStatusCode?: string;
+  payhereMd5sig?: string;
+  paidAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,6 +78,15 @@ const OrderSchema = new Schema<IOrder>(
     },
     note:          { type: String },
     paymentMethod: { type: String },
+    paymentStatus: {
+      type:    String,
+      enum:    ['unpaid', 'pending', 'paid', 'failed', 'cancelled', 'charged_back'],
+      default: 'unpaid',
+    },
+    payherePaymentId:  { type: String },
+    payhereStatusCode: { type: String },
+    payhereMd5sig:     { type: String },
+    paidAt:            { type: Date },
   },
   { timestamps: true }
 );

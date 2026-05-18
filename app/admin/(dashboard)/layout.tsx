@@ -23,10 +23,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect('/admin/login');
   }
 
-  if ((session.user as any)?.role === 'staff' && !(session.user as any)?.approved && (session.user as any)?.email) {
+  const sessionUser = session.user as { email?: string | null; role?: string; approved?: boolean } | undefined;
+
+  if (sessionUser?.role === 'staff' && !sessionUser.approved && sessionUser.email) {
       await connectToDatabase();
-      const user = await User.findOne({ email: session.user.email });
+      const user = await User.findOne({ email: sessionUser.email });
       if (!user || (user.role === 'staff' && !user.approved)) {
+        redirect('/admin/login');
       }
   }
 

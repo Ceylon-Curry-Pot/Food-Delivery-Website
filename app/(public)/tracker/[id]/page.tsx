@@ -102,7 +102,7 @@ export default function TrackOrderPage() {
         <div className="text-center max-w-sm">
           <p className="text-4xl mb-4">🔍</p>
           <h2 className="text-lg font-bold text-gray-900 mb-2">Order Not Found</h2>
-          <p className="text-sm text-gray-400 mb-6">{error || 'We couldn't find this order.'}</p>
+          <p className="text-sm text-gray-400 mb-6">{error || "We couldn't find this order."}</p>
           <Link href="/tracker" className="inline-block bg-red-600 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-red-700 transition-colors">
             Try Again
           </Link>
