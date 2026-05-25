@@ -16,10 +16,10 @@ interface OrdersTableWrapperProps {
 
 const statusMap: Record<string, { label: string, bg: string, text: string, icon: any }> = {
   pending: { label: "Pending", bg: "bg-gray-100", text: "text-gray-700", icon: Clock },
+  confirmed: { label: "Confirmed", bg: "bg-blue-100", text: "text-blue-700", icon: Check },
   preparing: { label: "Preparing", bg: "bg-purple-100", text: "text-purple-700", icon: Package },
-  ready: { label: "Ready", bg: "bg-yellow-100", text: "text-yellow-700", icon: Package },
   out_for_delivery: { label: "Out for Delivery", bg: "bg-orange-100", text: "text-orange-700", icon: Truck },
-  completed: { label: "Completed", bg: "bg-green-100", text: "text-green-700", icon: Check },
+  delivered: { label: "Delivered", bg: "bg-green-100", text: "text-green-700", icon: Check },
   cancelled: { label: "Cancelled", bg: "bg-red-100", text: "text-red-700", icon: X },
 };
 

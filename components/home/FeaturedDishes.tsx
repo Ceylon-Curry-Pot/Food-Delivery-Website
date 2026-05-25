@@ -1,5 +1,6 @@
 'use client';
 
+<<<<<<< HEAD
 import DishCard from './DishCard';
 import { featuredDishes } from '@/lib/data';
 import SectionHeader from './SectionHeader';
@@ -39,6 +40,53 @@ export default function FeaturedDishes() {
               <DishCard key={dish.id} {...dish} onAdd={handleAdd} />
             ))}
           </div>
+=======
+import DishCard from './DishCard';
+import SectionHeader from './SectionHeader';
+import { useCartStore } from '@/components/global/useCartStore';
+import Link from 'next/link';
+import type { MenuDish } from '@/lib/menu';
+
+type Props = {
+  dishes: MenuDish[];
+};
+
+export default function FeaturedDishes({ dishes }: Props) {
+  const addItem = useCartStore((state) => state.addItem);
+
+  const handleAddToCart = (id: string) => {
+    const dish = dishes.find((d) => d.id === id);
+    if (!dish) return;
+    addItem({
+      id: dish.id,
+      name: dish.name,
+      price: dish.price,
+      image: dish.image,
+    });
+  };
+
+  return (
+    <section id="featured-dishes" className="py-16 md:py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionHeader
+          tagline="Customer Favorites"
+          title="Featured Dishes"
+          description="Discover our most popular Sri Lankan specialties, loved by customers across the island"
+        />
+
+        {dishes.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {dishes.slice(0, 4).map((dish) => (
+              <DishCard key={dish.id} {...dish} onAdd={handleAddToCart} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
+            <p className="text-sm font-semibold text-gray-700">No featured dishes available</p>
+            <p className="mt-1 text-sm text-gray-400">Add available menu items in the admin dashboard.</p>
+          </div>
+        )}
+>>>>>>> ea3da3f4bccdb84663326d1d73f0772260b0b102
 
           <div className="text-center mt-12">
             <Link

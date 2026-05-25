@@ -5,16 +5,18 @@ import { useMemo, useState } from 'react';
 import SectionHeader from '@/components/home/SectionHeader';
 import MenuFilters from './MenuFilters';
 import MenuGrid from './MenuGrid';
-import { featuredDishes } from '@/lib/data';
 import {
-  getDishCategory,
   menuCategories,
+  type MenuDish,
   type MenuCategory,
 } from '@/lib/menu';
 import { useCartStore } from '@/components/global/useCartStore';
-import type { DishCardProps } from '@/components/home/DishCard';
 
-export default function MenuSection() {
+type Props = {
+  dishes: MenuDish[];
+};
+
+export default function MenuSection({ dishes }: Props) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] =
     useState<MenuCategory>('All');
@@ -24,10 +26,9 @@ export default function MenuSection() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
 
-    return featuredDishes.filter((d) => {
-      const category = getDishCategory(d);
+    return dishes.filter((d) => {
       const matchesCategory =
-        activeCategory === 'All' ? true : category === activeCategory;
+        activeCategory === 'All' ? true : d.category === activeCategory;
 
       const matchesSearch =
         q.length === 0
@@ -37,9 +38,9 @@ export default function MenuSection() {
 
       return matchesCategory && matchesSearch;
     });
-  }, [search, activeCategory]);
+  }, [dishes, search, activeCategory]);
 
-  const handleAdd = (dish: DishCardProps) => {
+  const handleAdd = (dish: MenuDish) => {
     addItem({
       id: dish.id,
       name: dish.name,
@@ -59,7 +60,10 @@ export default function MenuSection() {
       <MenuFilters
         search={search}
         onSearchChange={setSearch}
-        categories={menuCategories}
+        categories={menuCategories.filter(
+          (category) =>
+            category === 'All' || dishes.some((dish) => dish.category === category)
+        )}
         activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
       />

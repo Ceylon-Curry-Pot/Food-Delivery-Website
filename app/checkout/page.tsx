@@ -18,7 +18,6 @@ export default function CheckoutPage() {
   const router      = useRouter();
   const contactRef  = useRef<ContactFormHandle>(null);
   const addressRef  = useRef<DeliveryAddressFormHandle>(null);
-  const notesRef    = useRef<HTMLTextAreaElement>(null);
   const [placing, setPlacing] = useState(false);
   const [payMethod, setPayMethod] = useState<'cod' | 'card' | 'wallet'>('cod');
 
@@ -40,41 +39,72 @@ export default function CheckoutPage() {
 
     const contactData = contactRef.current?.getData();
     const addressData = addressRef.current?.getData();
+    const deliveryAddress = orderType === 'delivery'
+      ? `${addressData?.street}, ${addressData?.city}${addressData?.postal ? ', ' + addressData.postal : ''}${addressData?.instructions ? '. ' + addressData.instructions : ''}`
+      : undefined;
+    const orderPayload = {
+      customer: {
+        name:  contactData?.name,
+        phone: contactData?.phone,
+        email: contactData?.email,
+      },
+      type: orderType,
+      deliveryAddress,
+      items: items.map((i) => ({
+        menuItem: i.id,
+        qty: i.quantity,
+      })),
+      note,
+      paymentMethod: payMethod,
+    };
 
     setPlacing(true);
     try {
+      if (payMethod !== 'cod') {
+        const res = await fetch('/api/payhere/hash', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderPayload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.message || 'Failed to start PayHere checkout');
+        }
+        if (!window.payhere?.startPayment) {
+          throw new Error('PayHere checkout is still loading. Please try again.');
+        }
+
+        window.payhere.onCompleted = () => {
+          clearCart();
+          router.push(`/tracker/${data.order._id}`);
+        };
+        window.payhere.onDismissed = () => {
+          setPlacing(false);
+        };
+        window.payhere.onError = (error) => {
+          console.error('[PayHere]', error);
+          alert('Payment could not be completed. Please try again.');
+          setPlacing(false);
+        };
+
+        window.payhere.startPayment(data.payment);
+        return;
+      }
+
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer: {
-            name:  contactData?.name,
-            phone: contactData?.phone,
-            email: contactData?.email,
-          },
-          type:            orderType,
-          deliveryAddress: orderType === 'delivery'
-            ? `${addressData?.street}, ${addressData?.city}${addressData?.postal ? ', ' + addressData.postal : ''}${addressData?.instructions ? '. ' + addressData.instructions : ''}`
-            : undefined,
-          items: items.map((i) => ({
-            name:  i.name,
-            image: i.image,
-            qty:   i.quantity,
-            price: i.price,
-          })),
-          total,
-          note,
-          paymentMethod: payMethod,
-        }),
+        body: JSON.stringify(orderPayload),
       });
 
-      if (!res.ok) throw new Error('Failed to place order');
       const order = await res.json();
-      clearCart?.();
+      if (!res.ok) throw new Error(order?.message || 'Failed to place order');
+      clearCart();
       router.push(`/tracker/${order._id}`);
     } catch (err) {
       console.error(err);
-      alert('Failed to place order. Please try again.');
+      alert(err instanceof Error ? err.message : 'Failed to place order. Please try again.');
     } finally {
       setPlacing(false);
     }
@@ -100,8 +130,8 @@ export default function CheckoutPage() {
               <div className="space-y-2.5">
                 {([
                   { id: 'cod'    as const, label: 'Cash on Delivery', desc: 'Pay when your order arrives'        },
-                  { id: 'card'   as const, label: 'Credit / Debit Card', desc: 'Visa, Mastercard, AMEX'          },
-                  { id: 'wallet' as const, label: 'Digital Wallet', desc: 'FriMi, eZ Cash, Sampath Vishwa'       },
+                  { id: 'card'   as const, label: 'Credit / Debit Card', desc: 'Pay securely with PayHere'       },
+                  { id: 'wallet' as const, label: 'Digital Wallet', desc: 'PayHere wallets and online banking'   },
                 ]).map((m) => (
                   <button
                     key={m.id}
@@ -176,9 +206,9 @@ export default function CheckoutPage() {
                            disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {placing ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Placing Order…</>
+                  <><Loader2 className="w-4 h-4 animate-spin" /> {payMethod === 'cod' ? 'Placing Order…' : 'Opening PayHere…'}</>
                 ) : (
-                  <>Place Order <ArrowRight className="w-4 h-4" /></>
+                  <>{payMethod === 'cod' ? 'Place Order' : 'Pay with PayHere'} <ArrowRight className="w-4 h-4" /></>
                 )}
               </button>
 

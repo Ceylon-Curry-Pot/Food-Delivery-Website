@@ -1,37 +1,64 @@
-import type { DishCardProps } from '@/components/home/DishCard';
-
 export type MenuCategory =
   | 'All'
   | 'Rice & Curry'
   | 'Kottu'
-  | 'Biriyani'
   | 'Hoppers'
-  | 'Seafood'
-  | 'Vegetarian';
+  | 'Fried Rice'
+  | 'Biryani'
+  | 'Desserts'
+  | 'Beverages';
 
 export const menuCategories: MenuCategory[] = [
   'All',
   'Rice & Curry',
   'Kottu',
-  'Biriyani',
   'Hoppers',
-  'Seafood',
-  'Vegetarian',
+  'Fried Rice',
+  'Biryani',
+  'Desserts',
+  'Beverages',
 ];
 
-export const dishCategoryById: Record<string, Exclude<MenuCategory, 'All'>> = {
-  'red-pork-yellow-rice': 'Rice & Curry',
-  'black-pork-white-rice': 'Rice & Curry',
-  'chicken-biryani': 'Biriyani',
-  'veggie-kottu': 'Vegetarian',
-  'chicken-kottu': 'Kottu',
-  'beef-kottu': 'Kottu',
-  'egg-hoppers': 'Hoppers',
-  'fish-curry-rice': 'Seafood',
-  'lamprais': 'Rice & Curry',
-  'pol-sambol-rice': 'Vegetarian',
+export type MenuDish = {
+  id: string;
+  name: string;
+  description: string[];
+  price: number;
+  image: string;
+  category: Exclude<MenuCategory, 'All'>;
+  badge?: string;
 };
 
-export function getDishCategory(dish: DishCardProps): Exclude<MenuCategory, 'All'> {
-  return dishCategoryById[dish.id] ?? 'Rice & Curry';
+export type MenuItemRecord = {
+  _id: string | { toString(): string };
+  name: string;
+  price: number;
+  category: Exclude<MenuCategory, 'All'>;
+  description?: string | string[];
+  image?: string;
+  available?: boolean;
+};
+
+const DEFAULT_MENU_IMAGE =
+  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80';
+
+export function splitMenuDescription(description?: string | string[]) {
+  if (Array.isArray(description)) return description;
+
+  return (description ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+export function toMenuDish(item: MenuItemRecord): MenuDish {
+  return {
+    id: item._id.toString(),
+    name: item.name,
+    description: splitMenuDescription(item.description),
+    price: item.price,
+    image: item.image || DEFAULT_MENU_IMAGE,
+    category: item.category,
+    badge: item.available === false ? 'Unavailable' : undefined,
+  };
 }
