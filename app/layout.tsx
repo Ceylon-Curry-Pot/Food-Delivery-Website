@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
 
@@ -13,25 +13,25 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const playfair = Playfair_Display({
+  variable: '--font-playfair',
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800'],
+});
+
 export const metadata: Metadata = {
-  title: 'Ceylon Curry Pot',
+  title: 'Ceylon Curry Pot – Authentic Sri Lankan Cuisine',
   description:
-    'Ceylon Curry Pot is a food delivery website offering authentic Sri Lankan meals delivered fresh to your doorstep.',
+    'Experience the rich heritage of Sri Lankan cuisine, delivered fresh to your doorstep. Handcrafted recipes, bold spices, and authentic flavors.',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Providers>
-          {children}
-        </Providers>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
