@@ -1,10 +1,6 @@
 import type { Metadata } from 'next';
-<<<<<<< HEAD
 import { Geist, Geist_Mono, Playfair_Display } from 'next/font/google';
-=======
-import { Geist, Geist_Mono } from 'next/font/google';
 import Script from 'next/script';
->>>>>>> ea3da3f4bccdb84663326d1d73f0772260b0b102
 import './globals.css';
 import Providers from './providers';
 
@@ -35,12 +31,8 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-<<<<<<< HEAD
-      <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}>
-        <Providers>{children}</Providers>
-=======
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
       >
         <Script
           src="https://www.payhere.lk/lib/payhere.js"
@@ -49,7 +41,6 @@ export default function RootLayout({
         <Providers>
           {children}
         </Providers>
->>>>>>> ea3da3f4bccdb84663326d1d73f0772260b0b102
       </body>
     </html>
   );
