@@ -1,30 +1,21 @@
 'use client';
 
-import { ShoppingCart } from 'lucide-react';
-import { useCartStore } from '../global/useCartStore';
+import { ShoppingBag } from 'lucide-react';
+import { useCartStore, selectTotalItems } from '../global/useCartStore';
 
-type Props = {
-  onClick: () => void;
-};
-
-export default function CartButton({ onClick }: Props) {
-  const items = useCartStore((state) => state.items);
-
-  const totalItems = items.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
+export default function CartButton({ onClick }: { onClick: () => void }) {
+  const totalItems = useCartStore(selectTotalItems);
 
   return (
     <button
       onClick={onClick}
-      className="relative flex items-center justify-center w-11 h-11 rounded-full border border-gray-200 hover:border-red-300 hover:text-red-600 transition-all"
+      className="relative flex items-center justify-center w-10 h-10 rounded-xl border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all duration-200"
+      aria-label="Open basket"
     >
-      <ShoppingCart className="w-5 h-5" />
-
+      <ShoppingBag className="w-4.5 h-4.5" />
       {totalItems > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-[10px] font-semibold shadow-sm">
-          {totalItems}
+        <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full h-[18px] w-[18px] flex items-center justify-center text-[10px] font-bold shadow-sm">
+          {totalItems > 9 ? '9+' : totalItems}
         </span>
       )}
     </button>
