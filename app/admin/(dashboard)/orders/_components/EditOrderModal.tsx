@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Plus, Trash2 } from "lucide-react";
 
 interface EditOrderModalProps {
@@ -11,21 +11,33 @@ interface EditOrderModalProps {
   menuItems: any[];
 }
 
-export default function EditOrderModal({ order, isOpen, onClose, onSuccess, menuItems }: EditOrderModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    status: order?.status || 'pending',
+function buildFormData(order: any) {
+  return {
+    status: order?.status || "pending",
     customerName: order?.customer?.name || "",
     customerPhone: order?.customer?.phone || "",
     customerEmail: order?.customer?.email || "",
     type: order?.type || "delivery",
     deliveryAddress: order?.deliveryAddress || "",
-    items: order?.items?.map((item: any) => ({
-      menuItem: item.menuItem?._id || item.menuItem || "", 
-      qty: item.qty, 
-      price: item.price 
-    })) || []
-  });
+    items:
+      order?.items?.map((item: any) => ({
+        menuItem: item.menuItem?._id || item.menuItem || "",
+        qty: item.qty,
+        price: item.price,
+      })) || [],
+  };
+}
+
+export default function EditOrderModal({ order, isOpen, onClose, onSuccess, menuItems }: EditOrderModalProps) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState(() => buildFormData(order));
+
+  useEffect(() => {
+    if (isOpen && order) {
+      setFormData(buildFormData(order));
+      setLoading(false);
+    }
+  }, [isOpen, order]);
 
   if (!isOpen || !order) return null;
 
