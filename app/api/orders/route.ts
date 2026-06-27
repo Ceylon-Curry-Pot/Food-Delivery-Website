@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { sendOrderConfirmation } from '@/lib/sendOrderConfirmation';
 import connectToDatabase from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
 import {
@@ -72,7 +73,35 @@ export async function POST(req: Request) {
     });
 
     const populated = await Order.findById(order._id).populate('items.menuItem').lean();
-    return NextResponse.json(serializeOrder(populated), { status: 201 });
+    const serialized = serializeOrder(populated);
+
+    // Send confirmation email — wrapped in try/catch so a Resend failure
+    // never blocks or breaks the order response
+    if (serialized.customer?.email) {
+  try {
+    type SerializedItem = { name: string; qty: number; price: number };
+
+    await sendOrderConfirmation({
+      customerName:    serialized.customer.name,
+      customerEmail:   serialized.customer.email,
+      trackingId:      serialized.orderNumber,
+      orderId:         serialized._id,
+      total:           serialized.total,
+      orderType:       serialized.type,
+      deliveryAddress: serialized.deliveryAddress,
+      paymentMethod:   serialized.paymentMethod,
+      items:           (serialized.items as SerializedItem[]).map((i) => ({
+        name:  i.name,
+        qty:   i.qty,
+        price: i.price,
+      })),
+    });
+  } catch (emailError) {
+    console.error('[Email] Failed to send order confirmation:', emailError);
+  }
+}
+
+    return NextResponse.json(serialized, { status: 201 });
   } catch (error) {
     if (error instanceof OrderInputError) {
       return NextResponse.json({ message: error.message }, { status: error.status });
