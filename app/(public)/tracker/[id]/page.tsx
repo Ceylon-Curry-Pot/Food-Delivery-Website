@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, RefreshCw, MapPin, Phone, CreditCard, Clock } from 'lucide-react';
+import {
+  ArrowLeft, RefreshCw, MapPin, Phone,
+  CreditCard, Clock, Copy, Check,
+} from 'lucide-react';
 import OrderStatusTracker from '@/components/tracker/OrderStatusTracker';
 import type { OrderStatus } from '@/lib/models/Order';
 
@@ -46,6 +49,45 @@ const STATUS_COLORS: Record<OrderStatus, string> = {
   cancelled:        'bg-red-50 text-red-700 border-red-200',
 };
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const el = document.createElement('textarea');
+      el.value = text;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copy tracker code"
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all
+        ${copied
+          ? 'bg-green-100 text-green-700 border border-green-200'
+          : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+        }`}
+    >
+      {copied
+        ? <><Check className="w-3.5 h-3.5" /> Copied!</>
+        : <><Copy className="w-3.5 h-3.5" /> Copy Code</>
+      }
+    </button>
+  );
+}
+
 export default function TrackOrderPage() {
   const { id }                          = useParams<{ id: string }>();
   const [order, setOrder]               = useState<Order | null>(null);
@@ -54,7 +96,7 @@ export default function TrackOrderPage() {
   const [refreshing, setRefreshing]     = useState(false);
   const [lastUpdated, setLastUpdated]   = useState<Date>(new Date());
 
-  const fetchOrder = async (quiet = false) => {
+  const fetchOrder = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
     else setRefreshing(true);
     setError('');
@@ -70,20 +112,18 @@ export default function TrackOrderPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [id]);
 
-  // Initial fetch
-  useEffect(() => { fetchOrder(); }, [id]);
+  useEffect(() => { fetchOrder(); }, [fetchOrder]);
 
-  // Poll every 30 seconds while order is not terminal
+  // Poll every 30 seconds while order is not in a terminal state
   useEffect(() => {
     if (!order) return;
     if (order.status === 'delivered' || order.status === 'cancelled') return;
     const interval = setInterval(() => fetchOrder(true), 30_000);
     return () => clearInterval(interval);
-  }, [order?.status]);
+  }, [order?.status, fetchOrder]);
 
-  /* ── Loading ── */
   if (loading) {
     return (
       <main className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -95,7 +135,6 @@ export default function TrackOrderPage() {
     );
   }
 
-  /* ── Error ── */
   if (error || !order) {
     return (
       <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -103,7 +142,10 @@ export default function TrackOrderPage() {
           <p className="text-4xl mb-4">🔍</p>
           <h2 className="text-lg font-bold text-gray-900 mb-2">Order Not Found</h2>
           <p className="text-sm text-gray-400 mb-6">{error || "We couldn't find this order."}</p>
-          <Link href="/tracker" className="inline-block bg-red-600 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-red-700 transition-colors">
+          <Link
+            href="/tracker"
+            className="inline-block bg-red-600 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-red-700 transition-colors"
+          >
             Try Again
           </Link>
         </div>
@@ -117,7 +159,7 @@ export default function TrackOrderPage() {
     <main className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-5">
 
-        {/* ── Back + refresh ── */}
+        {/* Back + refresh */}
         <div className="flex items-center justify-between">
           <Link
             href="/tracker"
@@ -136,41 +178,68 @@ export default function TrackOrderPage() {
           </button>
         </div>
 
-        {/* ── Hero card ── */}
+        {/* Hero card — order number with copy button */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-start justify-between gap-4 mb-1">
+          <div className="flex items-start justify-between gap-4 mb-4">
             <div>
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Order Number</p>
-              <h1 className="text-2xl font-bold text-gray-900 font-mono">{order.orderNumber}</h1>
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">
+                Order Number
+              </p>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900 font-mono tracking-wide">
+                  {order.orderNumber}
+                </h1>
+                <CopyButton text={order.orderNumber} />
+              </div>
             </div>
             <span className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-full border ${STATUS_COLORS[order.status]}`}>
               {STATUS_LABELS[order.status]}
             </span>
           </div>
-          <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            Placed at {placedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},{' '}
-            {placedAt.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}
-          </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Last updated: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-          </p>
+
+          {/* Tracker code reminder */}
+          <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 flex items-start gap-2.5">
+            <span className="text-amber-500 text-base flex-shrink-0 mt-0.5">💡</span>
+            <p className="text-xs text-amber-700 leading-relaxed">
+              Save your tracker code <span className="font-mono font-bold">{order.orderNumber}</span> — you can use it anytime at{' '}
+              <Link href="/tracker" className="underline font-semibold hover:text-amber-900 transition-colors">
+                ceyloncurrypot.lk/tracker
+              </Link>
+              {order.customer.email && ' or check the confirmation email we sent you'}.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4 mt-4 text-xs text-gray-400">
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              Placed {placedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},{' '}
+              {placedAt.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+            <span>·</span>
+            <span>
+              Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+          </div>
         </div>
 
-        {/* ── Tracker ── */}
+        {/* Tracker progress */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h2 className="text-base font-bold text-gray-900 mb-6">Order Progress</h2>
-          <OrderStatusTracker status={order.status} />
+          <OrderStatusTracker status={order.status} orderType={order.type} />
         </div>
 
-        {/* ── Order items ── */}
+        {/* Items */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h2 className="text-base font-bold text-gray-900 mb-4">Items Ordered</h2>
           <div className="space-y-3">
             {order.items.map((item, i) => (
               <div key={i} className="flex items-center gap-3">
                 {item.image && (
-                  <img src={item.image} alt={item.name} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                  />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
@@ -188,7 +257,7 @@ export default function TrackOrderPage() {
           </div>
         </div>
 
-        {/* ── Delivery + customer info ── */}
+        {/* Order details */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           <h2 className="text-base font-bold text-gray-900 mb-4">Order Details</h2>
           <div className="space-y-3 text-sm">
@@ -197,6 +266,9 @@ export default function TrackOrderPage() {
               <div>
                 <p className="font-semibold text-gray-800">{order.customer.name}</p>
                 <p className="text-gray-400">{order.customer.phone}</p>
+                {order.customer.email && (
+                  <p className="text-gray-400">{order.customer.email}</p>
+                )}
               </div>
             </div>
 
@@ -215,7 +287,7 @@ export default function TrackOrderPage() {
                 <MapPin className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="font-semibold text-gray-800">Pickup Location</p>
-                  <p className="text-gray-400">123 Galle Road, Colombo 03</p>
+                  <p className="text-gray-400">Liberty Plaza I Food Court, Colombo</p>
                 </div>
               </div>
             )}
@@ -225,21 +297,31 @@ export default function TrackOrderPage() {
                 <CreditCard className="w-4 h-4 text-red-500 flex-shrink-0" />
                 <div>
                   <p className="font-semibold text-gray-800">Payment</p>
-                  <p className="text-gray-400 capitalize">{order.paymentMethod.replace('_', ' ')}</p>
+                  <p className="text-gray-400 capitalize">
+                    {order.paymentMethod === 'cod'
+                      ? 'Cash on Delivery'
+                      : order.paymentMethod === 'card'
+                      ? 'Credit / Debit Card'
+                      : order.paymentMethod === 'wallet'
+                      ? 'Digital Wallet'
+                      : order.paymentMethod}
+                  </p>
                 </div>
               </div>
             )}
 
             {order.note && (
               <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Note</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                  Note
+                </p>
                 <p className="text-gray-700 text-sm">{order.note}</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* ── Help ── */}
+        {/* Help */}
         <div className="text-center pb-4">
           <p className="text-xs text-gray-400">
             Need help?{' '}
@@ -247,8 +329,8 @@ export default function TrackOrderPage() {
               Contact us
             </Link>
             {' '}or call{' '}
-            <a href="tel:+94112345678" className="text-red-600 font-medium hover:underline">
-              +94 11 234 5678
+            <a href="tel:0778282112" className="text-red-600 font-medium hover:underline">
+              077 828 2112
             </a>
           </p>
         </div>
