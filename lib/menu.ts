@@ -2,9 +2,14 @@ export type MenuCategory =
   | 'All'
   | 'Rice & Curry'
   | 'Kottu'
-  | 'Hoppers'
   | 'Fried Rice'
-  | 'Biryani'
+  | 'Dum Biryani'
+  | 'Masala Biryani'
+  | 'Roast Paan'
+  | 'Pol Roti'
+  | 'Meat Portions'
+  | 'Vegetarian Portions'
+  | 'Hoppers'
   | 'Desserts'
   | 'Beverages';
 
@@ -12,11 +17,16 @@ export const menuCategories: MenuCategory[] = [
   'All',
   'Rice & Curry',
   'Kottu',
-  'Hoppers',
   'Fried Rice',
-  'Biryani',
+  'Dum Biryani',
+  'Masala Biryani',
+  'Roast Paan',
+  'Pol Roti',
+  'Meat Portions',
+  'Vegetarian Portions',
+  'Hoppers',
   'Desserts',
-  'Beverages',
+  'Beverages'
 ];
 
 export type MenuDish = {

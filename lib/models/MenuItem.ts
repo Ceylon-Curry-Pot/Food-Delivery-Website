@@ -3,9 +3,14 @@ import mongoose, { Schema, Document } from 'mongoose';
 export type MenuCategory = 
   | 'Rice & Curry'
   | 'Kottu'
-  | 'Hoppers'
   | 'Fried Rice'
-  | 'Biryani'
+  | 'Dum Biryani'
+  | 'Masala Biryani'
+  | 'Roast Paan'
+  | 'Pol Roti'
+  | 'Meat Portions'
+  | 'Vegetarian Portions'
+  | 'Hoppers'
   | 'Desserts'
   | 'Beverages';
 
@@ -26,7 +31,7 @@ const MenuItemSchema = new Schema<IMenuItem>(
     price: { type: Number, required: true, min: 0 },
     category: { 
       type: String, 
-      enum: ['Rice & Curry', 'Kottu', 'Hoppers', 'Fried Rice', 'Biryani', 'Desserts', 'Beverages'],
+      enum: ['Rice & Curry', 'Kottu', 'Hoppers', 'Fried Rice', 'Dum Biryani', 'Masala Biryani', 'Desserts', 'Beverages', 'Roast Paan', 'Pol Roti', 'Meat Portions', 'Vegetarian Portions'],
       required: true
     },
     description: { type: String },
