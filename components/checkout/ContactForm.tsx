@@ -9,14 +9,14 @@ export type ContactFormHandle = {
 };
 
 const ContactForm = forwardRef<ContactFormHandle>((_, ref) => {
-  const nameRef  = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
 
   useImperativeHandle(ref, () => ({
     validate() {
       let ok = true;
-      [nameRef, phoneRef].forEach((r) => {
+      [nameRef, phoneRef, emailRef].forEach((r) => {
         if (!r.current?.value.trim()) {
           r.current?.classList.add('border-red-400', 'bg-red-50');
           ok = false;
@@ -26,7 +26,7 @@ const ContactForm = forwardRef<ContactFormHandle>((_, ref) => {
     },
     getData() {
       return {
-        name:  nameRef.current?.value.trim()  ?? '',
+        name: nameRef.current?.value.trim() ?? '',
         phone: phoneRef.current?.value.trim() ?? '',
         email: emailRef.current?.value.trim() ?? '',
       };
@@ -76,7 +76,7 @@ const ContactForm = forwardRef<ContactFormHandle>((_, ref) => {
 
         <div className="flex flex-col gap-1.5 sm:col-span-2">
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Email Address
+            Email Address <span className="text-red-500">*</span>
           </label>
           <input
             ref={emailRef}

@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { X, Trash2 } from "lucide-react";
+import { menuCategories } from "@/lib/menu";
 
 interface AddEditItemModalProps {
-  item: any | null; // null for Add, object for Edit
+  item: any | null;
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (item: any, isEdit: boolean, isDelete?: boolean) => void;
 }
 
-const CATEGORIES = [
-  'Rice & Curry', 'Kottu', 'Hoppers', 'Fried Rice', 'Biryani', 'Desserts', 'Beverages'
-];
+// Removed — now comes from lib/menu.ts so it stays in sync automatically
+const CATEGORIES = menuCategories.filter((c) => c !== 'All');
 
 export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: AddEditItemModalProps) {
   const isEdit = !!item;
@@ -84,7 +84,7 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
 
   const handleDelete = async () => {
     if (!confirm(`Remove ${item.name} from the menu? This cannot be undone.`)) return;
-    
+
     setDeleting(true);
     try {
       const res = await fetch(`/api/menu/${item._id}`, { method: "DELETE" });
@@ -113,17 +113,33 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[80vh]">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Item Name *</label>
-            <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full border rounded-lg p-2 text-gray-900" />
+            <input
+              required
+              value={formData.name}
+              onChange={e => setFormData({...formData, name: e.target.value})}
+              className="w-full border rounded-lg p-2 text-gray-900"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Price (Rs.) *</label>
-              <input required type="number" min="0" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full border rounded-lg p-2 text-gray-900" />
+              <input
+                required
+                type="number"
+                min="0"
+                value={formData.price}
+                onChange={e => setFormData({...formData, price: e.target.value})}
+                className="w-full border rounded-lg p-2 text-gray-900"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-              <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full border rounded-lg p-2 text-gray-900">
+              <select
+                value={formData.category}
+                onChange={e => setFormData({...formData, category: e.target.value})}
+                className="w-full border rounded-lg p-2 text-gray-900"
+              >
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
@@ -131,25 +147,46 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
-            <input type="url" placeholder="https://..." value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} className="w-full border rounded-lg p-2 text-gray-900" />
+            <input
+              type="url"
+              placeholder="https://..."
+              value={formData.image}
+              onChange={e => setFormData({...formData, image: e.target.value})}
+              className="w-full border rounded-lg p-2 text-gray-900"
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
-            <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full border rounded-lg p-2 text-gray-900" rows={3} />
+            <textarea
+              value={formData.description}
+              onChange={e => setFormData({...formData, description: e.target.value})}
+              className="w-full border rounded-lg p-2 text-gray-900"
+              rows={3}
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Availability</label>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="available" checked={formData.available === true} onChange={() => setFormData({...formData, available: true})} />
+                <input
+                  type="radio"
+                  name="available"
+                  checked={formData.available === true}
+                  onChange={() => setFormData({...formData, available: true})}
+                />
                 <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-green-500"/> Available
                 </span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="available" checked={formData.available === false} onChange={() => setFormData({...formData, available: false})} />
+                <input
+                  type="radio"
+                  name="available"
+                  checked={formData.available === false}
+                  onChange={() => setFormData({...formData, available: false})}
+                />
                 <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-red-500"/> Unavailable
                 </span>
@@ -159,16 +196,29 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
 
           <div className="pt-4 border-t border-gray-100 flex justify-between items-center mt-2">
             {isEdit ? (
-               <button type="button" onClick={handleDelete} disabled={deleting} className="text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition">
-                 <Trash2 size={16} /> {deleting ? 'Deleting...' : 'Delete Item'}
-               </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition"
+              >
+                <Trash2 size={16} /> {deleting ? 'Deleting...' : 'Delete Item'}
+              </button>
             ) : <div/>}
 
             <div className="flex gap-3">
-              <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50 transition border-gray-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-gray-700 border rounded-lg hover:bg-gray-50 transition border-gray-200"
+              >
                 Cancel
               </button>
-              <button type="submit" disabled={loading} className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover disabled:opacity-50 transition">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover disabled:opacity-50 transition"
+              >
                 {loading ? 'Saving...' : (isEdit ? 'Save Changes' : 'Add Item')}
               </button>
             </div>
