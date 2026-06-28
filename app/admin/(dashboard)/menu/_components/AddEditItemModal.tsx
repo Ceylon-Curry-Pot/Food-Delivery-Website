@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Trash2 } from "lucide-react";
-import { menuCategories } from "@/lib/menu";
+import { menuCategories, type MenuCategory } from "@/lib/menu";
 
 interface AddEditItemModalProps {
   item: any | null;
@@ -11,42 +11,50 @@ interface AddEditItemModalProps {
   onSuccess: (item: any, isEdit: boolean, isDelete?: boolean) => void;
 }
 
-// Removed — now comes from lib/menu.ts so it stays in sync automatically
-const CATEGORIES = menuCategories.filter((c) => c !== 'All');
+// Derived from lib/menu.ts — stays in sync automatically
+const CATEGORIES = menuCategories.filter((c): c is Exclude<MenuCategory, 'All'> => c !== 'All');
+
+interface FormData {
+  name: string;
+  price: string;
+  category: string;          // string so the <select> value works without casting
+  description: string;
+  available: boolean;
+  image: string;
+}
+
+const EMPTY_FORM: FormData = {
+  name:        '',
+  price:       '',
+  category:    CATEGORIES[0],
+  description: '',
+  available:   true,
+  image:       '',
+};
 
 export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: AddEditItemModalProps) {
   const isEdit = !!item;
-  const [loading, setLoading] = useState(false);
+  const [loading,  setLoading]  = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    category: CATEGORIES[0],
-    description: "",
-    available: true,
-    image: ""
-  });
+  const [errorMsg, setErrorMsg] = useState('');
+  const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
 
   useEffect(() => {
-    if (item && isOpen) {
+    if (!isOpen) { setErrorMsg(''); return; }
+    if (item) {
       setFormData({
-        name: item.name,
-        price: item.price.toString(),
-        category: item.category,
-        description: item.description || "",
-        available: item.available,
-        image: item.image || ""
+        name:        item.name        ?? '',
+        price:       String(item.price ?? ''),
+        category:    item.category    ?? CATEGORIES[0],
+        // description may be string or string[] — normalise to string for the textarea
+        description: Array.isArray(item.description)
+          ? item.description.join(', ')
+          : (item.description ?? ''),
+        available:   item.available   ?? true,
+        image:       item.image       ?? '',
       });
-    } else if (!item && isOpen) {
-      setFormData({
-        name: "",
-        price: "",
-        category: CATEGORIES[0],
-        description: "",
-        available: true,
-        image: ""
-      });
+    } else {
+      setFormData(EMPTY_FORM);
     }
   }, [item, isOpen]);
 
@@ -54,56 +62,77 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setErrorMsg('');
 
+    const parsedPrice = Number(formData.price);
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      setErrorMsg('Please enter a valid price.');
+      return;
+    }
+
+    setLoading(true);
     try {
       const payload = {
-        ...formData,
-        price: Number(formData.price)
+        name:        formData.name.trim(),
+        price:       parsedPrice,
+        category:    formData.category,
+        description: formData.description.trim(),
+        available:   formData.available,
+        image:       formData.image.trim(),
       };
 
-      const url = isEdit ? `/api/menu/${item._id}` : `/api/menu`;
-      const method = isEdit ? "PATCH" : "POST";
+      const url    = isEdit ? `/api/menu/${item._id}` : '/api/menu';
+      const method = isEdit ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("API failed");
-      const savedItem = await res.json();
-      onSuccess(savedItem, isEdit);
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data?.message || 'Failed to save menu item.');
+        return;
+      }
+
+      onSuccess(data, isEdit);
       onClose();
-    } catch (err) {
-      alert("Failed to save menu item.");
+    } catch {
+      setErrorMsg('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Remove ${item.name} from the menu? This cannot be undone.`)) return;
-
+    if (!confirm(`Remove "${item.name}" from the menu? This cannot be undone.`)) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/menu/${item._id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      const res = await fetch(`/api/menu/${item._id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        setErrorMsg(data?.message || 'Failed to delete item.');
+        return;
+      }
       onSuccess(item, true, true);
       onClose();
-    } catch (err) {
-      alert("Failed to delete menu item.");
+    } catch {
+      setErrorMsg('Network error. Please try again.');
     } finally {
       setDeleting(false);
     }
   };
+
+  const set = (key: keyof FormData, value: string | boolean) =>
+    setFormData((prev) => ({ ...prev, [key]: value }));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col">
         <div className="flex justify-between items-center p-4 border-b border-gray-100">
           <h2 className="font-bold text-lg text-gray-900">
-            {isEdit ? "Edit Menu Item" : "Add New Menu Item"}
+            {isEdit ? 'Edit Menu Item' : 'Add New Menu Item'}
           </h2>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
             <X size={20} />
@@ -111,13 +140,21 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[80vh]">
+          {/* Error banner */}
+          {errorMsg && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+              {errorMsg}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Item Name *</label>
             <input
               required
               value={formData.name}
-              onChange={e => setFormData({...formData, name: e.target.value})}
-              className="w-full border rounded-lg p-2 text-gray-900"
+              onChange={(e) => set('name', e.target.value)}
+              placeholder="e.g. Red Pork Yellow Rice"
+              className="w-full border rounded-lg p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400"
             />
           </div>
 
@@ -128,19 +165,23 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
                 required
                 type="number"
                 min="0"
+                step="1"
                 value={formData.price}
-                onChange={e => setFormData({...formData, price: e.target.value})}
-                className="w-full border rounded-lg p-2 text-gray-900"
+                onChange={(e) => set('price', e.target.value)}
+                placeholder="e.g. 1850"
+                className="w-full border rounded-lg p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
               <select
                 value={formData.category}
-                onChange={e => setFormData({...formData, category: e.target.value})}
-                className="w-full border rounded-lg p-2 text-gray-900"
+                onChange={(e) => set('category', e.target.value)}
+                className="w-full border rounded-lg p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400"
               >
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -151,19 +192,25 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
               type="url"
               placeholder="https://..."
               value={formData.image}
-              onChange={e => setFormData({...formData, image: e.target.value})}
-              className="w-full border rounded-lg p-2 text-gray-900"
+              onChange={(e) => set('image', e.target.value)}
+              className="w-full border rounded-lg p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description (Optional)
+            </label>
             <textarea
               value={formData.description}
-              onChange={e => setFormData({...formData, description: e.target.value})}
-              className="w-full border rounded-lg p-2 text-gray-900"
+              onChange={(e) => set('description', e.target.value)}
+              placeholder="Separate items with commas: Red pork curry, steamed rice, 4 vegetables"
+              className="w-full border rounded-lg p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400"
               rows={3}
             />
+            <p className="text-xs text-gray-400 mt-1">
+              Separate features with commas — they display as bullet points on the menu.
+            </p>
           </div>
 
           <div>
@@ -174,10 +221,10 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
                   type="radio"
                   name="available"
                   checked={formData.available === true}
-                  onChange={() => setFormData({...formData, available: true})}
+                  onChange={() => set('available', true)}
                 />
                 <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-500"/> Available
+                  <span className="w-2 h-2 rounded-full bg-green-500" /> Available
                 </span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -185,16 +232,16 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
                   type="radio"
                   name="available"
                   checked={formData.available === false}
-                  onChange={() => setFormData({...formData, available: false})}
+                  onChange={() => set('available', false)}
                 />
                 <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-red-500"/> Unavailable
+                  <span className="w-2 h-2 rounded-full bg-red-500" /> Unavailable
                 </span>
               </label>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-gray-100 flex justify-between items-center mt-2">
+          <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
             {isEdit ? (
               <button
                 type="button"
@@ -202,9 +249,9 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
                 disabled={deleting}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 transition"
               >
-                <Trash2 size={16} /> {deleting ? 'Deleting...' : 'Delete Item'}
+                <Trash2 size={16} /> {deleting ? 'Deleting…' : 'Delete Item'}
               </button>
-            ) : <div/>}
+            ) : <div />}
 
             <div className="flex gap-3">
               <button
@@ -217,9 +264,9 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg hover:bg-brand-hover disabled:opacity-50 transition"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 transition"
               >
-                {loading ? 'Saving...' : (isEdit ? 'Save Changes' : 'Add Item')}
+                {loading ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Item'}
               </button>
             </div>
           </div>

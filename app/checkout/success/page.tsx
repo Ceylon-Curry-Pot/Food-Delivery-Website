@@ -1,13 +1,7 @@
-import ConfirmationHero from '@/components/checkout/ConfirmationHero';
-import ConfirmationDetails from '@/components/checkout/ConfirmationDetails';
+import { redirect } from 'next/navigation';
 
+// This page is not used — checkout redirects directly to /tracker/:id
+// Keeping the file prevents 404 if someone bookmarks an old URL
 export default function SuccessPage() {
-  return (
-    <main className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-xl mx-auto px-4 space-y-5">
-        <ConfirmationHero />
-        <ConfirmationDetails />
-      </div>
-    </main>
-  );
+  redirect('/menu');
 }

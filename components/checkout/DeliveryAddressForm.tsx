@@ -30,10 +30,10 @@ const DeliveryAddressForm = forwardRef<DeliveryAddressFormHandle>((_, ref) => {
     },
     getData() {
       return {
-        street:       streetRef.current?.value.trim()      ?? '',
-        city:         cityRef.current?.value.trim()         ?? '',
-        postal:       postalRef.current?.value.trim()       ?? '',
-        instructions: instructionRef.current?.value.trim()  ?? '',
+        street:       streetRef.current?.value.trim()     ?? '',
+        city:         cityRef.current?.value.trim()        ?? '',
+        postal:       postalRef.current?.value.trim()      ?? '',
+        instructions: instructionRef.current?.value.trim() ?? '',
       };
     },
   }));
@@ -50,10 +50,12 @@ const DeliveryAddressForm = forwardRef<DeliveryAddressFormHandle>((_, ref) => {
           </div>
           <h2 className="text-lg font-bold text-gray-900">Pickup Location</h2>
         </div>
-        <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
-          <p className="font-semibold text-gray-800 mb-1">Ceylon Curry Pot</p>
-          <p>123 Galle Road, Colombo 03</p>
-          <p className="text-gray-400 mt-1 text-xs">Ready for pickup in approx. 25–30 minutes</p>
+        <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600 space-y-1">
+          <p className="font-semibold text-gray-800">Ceylon Curry Pot</p>
+          <p>Liberty Plaza I Food Court, Colombo</p>
+          <p className="text-gray-400 text-xs pt-1">
+            Ready for pickup in approximately 25–30 minutes after confirmation.
+          </p>
         </div>
       </div>
     );
