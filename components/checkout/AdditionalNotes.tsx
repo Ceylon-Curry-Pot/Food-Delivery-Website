@@ -1,8 +1,12 @@
 'use client';
 
 import { FileText } from 'lucide-react';
+import { useCartStore } from '@/components/global/useCartStore';
 
 export default function AdditionalNotes() {
+  const note    = useCartStore((s) => s.note);
+  const setNote = useCartStore((s) => s.setNote);
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
       <div className="flex items-center gap-3 mb-5">
@@ -13,6 +17,8 @@ export default function AdditionalNotes() {
       </div>
 
       <textarea
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
         placeholder="Allergy information, spice level preferences, special requests…"
         className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400
                    outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all resize-none"
