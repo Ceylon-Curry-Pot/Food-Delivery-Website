@@ -23,6 +23,10 @@ export async function sendOrderConfirmation({
   paymentMethod,
   items = [],
 }: OrderEmail) {
+  if (!resend) {
+    return;
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
   const trackingUrl = `${baseUrl}/tracker/${orderId}`;
 

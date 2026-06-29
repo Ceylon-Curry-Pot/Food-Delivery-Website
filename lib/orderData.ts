@@ -21,7 +21,22 @@ type SerializedOrderItem = Record<string, unknown> & {
   menuItem?: unknown;
 };
 
-type SerializableOrder = Record<string, unknown> & {
+type OrderCustomer = {
+  name: string;
+  phone: string;
+  email?: string;
+};
+
+type SerializableOrder = {
+  orderNumber: string;
+  customer: OrderCustomer;
+  type: 'delivery' | 'pickup';
+  total: number;
+  paymentStatus: string;
+  status: string;
+  deliveryAddress?: string;
+  note?: string;
+  paymentMethod?: string;
   _id?: { toString(): string };
   items?: SerializedOrderItem[];
   createdAt?: Date | string;
@@ -29,13 +44,21 @@ type SerializableOrder = Record<string, unknown> & {
   paidAt?: Date | string;
 };
 
-type SerializedOrder = Record<string, unknown> & {
-  _id?: string;
-  items?: Array<Record<string, unknown> & { menuItem?: unknown }>;
+type SerializedOrder = {
+  _id: string;
+  orderNumber: string;
+  customer: OrderCustomer;
+  type: 'delivery' | 'pickup';
+  deliveryAddress?: string;
+  items: Array<Record<string, unknown> & { menuItem?: unknown }>;
+  total: number;
+  note?: string;
+  paymentMethod?: string;
+  paymentStatus: string;
+  status: string;
   createdAt?: string;
   updatedAt?: string;
   paidAt?: string;
-  status?: string;
 };
 
 export class OrderInputError extends Error {
@@ -104,11 +127,11 @@ export function calculateOrderTotal(
 export function serializeOrder(order: SerializableOrder): SerializedOrder {
   return {
     ...order,
-    _id: order._id?.toString(),
+    _id: order._id!.toString(),
     items: order.items?.map((item) => ({
       ...item,
       menuItem: serializeMenuItemRef(item.menuItem),
-    })),
+    })) ?? [],
     createdAt: serializeDate(order.createdAt),
     updatedAt: serializeDate(order.updatedAt),
     paidAt: serializeDate(order.paidAt),
