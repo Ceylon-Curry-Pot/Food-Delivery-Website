@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       (error as { name: string }).name === 'ValidationError'
     ) {
       const msg = Object.values(
-        (error as { errors: Record<string, { message: string }> }).errors
+        (error as unknown as { errors: Record<string, { message: string }> }).errors
       )
         .map((e) => e.message)
         .join(', ');
