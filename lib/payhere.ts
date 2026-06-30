@@ -22,9 +22,9 @@ export type PayhereNotifyPayload = {
 };
 
 export function getPayhereConfig() {
-  const merchantId = process.env.PAYHERE_MERCHANT_ID;
+  const merchantId = process.env.NEXT_PUBLIC_PAYHERE_MERCHANT_ID;
   const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
-  const mode = (process.env.PAYHERE_MODE || 'sandbox') as PayhereMode;
+  const mode = (process.env.NEXT_PUBLIC_PAYHERE_MODE || 'sandbox') as PayhereMode;
 
   if (!merchantId || !merchantSecret) {
     throw new Error('Missing PAYHERE_MERCHANT_ID or PAYHERE_MERCHANT_SECRET');
