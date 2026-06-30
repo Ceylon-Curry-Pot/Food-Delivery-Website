@@ -1,43 +1,54 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, Trash2 } from "lucide-react";
-import { menuCategories, type MenuCategory } from "@/lib/menu";
+import type { MenuItemRecord } from "@/lib/menu";
+type AdminMenuItem = Omit<MenuItemRecord, '_id'> & {
+  _id: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 interface AddEditItemModalProps {
-  item: any | null;
+  item: AdminMenuItem | null;
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (item: any, isEdit: boolean, isDelete?: boolean) => void;
+  onSuccess: (item: AdminMenuItem, isEdit: boolean, isDelete?: boolean) => void;
+  categories: string[];
 }
-
-// Derived from lib/menu.ts — stays in sync automatically
-const CATEGORIES = menuCategories.filter((c): c is Exclude<MenuCategory, 'All'> => c !== 'All');
 
 interface FormData {
   name: string;
   price: string;
-  category: string;          // string so the <select> value works without casting
+  category: string;
   description: string;
   available: boolean;
   image: string;
 }
 
-const EMPTY_FORM: FormData = {
+const createEmptyForm = (category = ''): FormData => ({
   name:        '',
   price:       '',
-  category:    CATEGORIES[0],
+  category,
   description: '',
   available:   true,
   image:       '',
-};
+});
 
-export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: AddEditItemModalProps) {
+export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, categories }: AddEditItemModalProps) {
   const isEdit = !!item;
   const [loading,  setLoading]  = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
+  const [formData, setFormData] = useState<FormData>(createEmptyForm(categories[0] ?? ''));
+
+  const categoryOptions = useMemo(() => {
+    if (item?.category && !categories.includes(item.category)) {
+      return [...categories, item.category];
+    }
+
+    return categories;
+  }, [categories, item?.category]);
 
   useEffect(() => {
     if (!isOpen) { setErrorMsg(''); return; }
@@ -45,7 +56,7 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
       setFormData({
         name:        item.name        ?? '',
         price:       String(item.price ?? ''),
-        category:    item.category    ?? CATEGORIES[0],
+        category:    item.category    ?? categoryOptions[0] ?? '',
         // description may be string or string[] — normalise to string for the textarea
         description: Array.isArray(item.description)
           ? item.description.join(', ')
@@ -54,9 +65,9 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
         image:       item.image       ?? '',
       });
     } else {
-      setFormData(EMPTY_FORM);
+      setFormData(createEmptyForm(categories[0] ?? ''));
     }
-  }, [item, isOpen]);
+  }, [item, isOpen, categories, categoryOptions]);
 
   if (!isOpen) return null;
 
@@ -106,6 +117,10 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
   };
 
   const handleDelete = async () => {
+    if (!item) {
+      return;
+    }
+
     if (!confirm(`Remove "${item.name}" from the menu? This cannot be undone.`)) return;
     setDeleting(true);
     try {
@@ -179,7 +194,7 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess }: A
                 onChange={(e) => set('category', e.target.value)}
                 className="w-full border rounded-lg p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400"
               >
-                {CATEGORIES.map((c) => (
+                {categoryOptions.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>

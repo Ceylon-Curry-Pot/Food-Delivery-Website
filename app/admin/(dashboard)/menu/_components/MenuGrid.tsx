@@ -3,28 +3,42 @@
 import { useState } from "react";
 import MenuItemCard from "./MenuItemCard";
 import AddEditItemModal from "./AddEditItemModal";
+import EditCategoryModal from "./EditCategoryModal";
 import { Plus } from "lucide-react";
+import type { MenuItemRecord } from "@/lib/menu";
+
+type AdminMenuItem = Omit<MenuItemRecord, '_id'> & {
+  _id: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 interface MenuGridProps {
-  initialItems: any[];
+  initialItems: AdminMenuItem[];
+  initialCategories: string[];
 }
 
-export default function MenuGrid({ initialItems }: MenuGridProps) {
+export default function MenuGrid({ initialItems, initialCategories }: MenuGridProps) {
   const [items, setItems] = useState(initialItems);
-  const [modalItem, setModalItem] = useState<any | null>(null);
+  const [categories, setCategories] = useState(initialCategories);
+  const [modalItem, setModalItem] = useState<AdminMenuItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   const handleOpenAdd = () => {
     setModalItem(null);
     setIsModalOpen(true);
   };
+  const handleOpenEditCategory = () => {
+    setIsCategoryModalOpen(true);
+  };
 
-  const handleOpenEdit = (item: any) => {
+  const handleOpenEdit = (item: AdminMenuItem) => {
     setModalItem(item);
     setIsModalOpen(true);
   };
 
-  const handleModalSuccess = (savedItem: any, isEdit: boolean, isDelete?: boolean) => {
+  const handleModalSuccess = (savedItem: AdminMenuItem, isEdit: boolean, isDelete?: boolean) => {
     if (isDelete) {
       setItems(prev => prev.filter(i => i._id !== savedItem._id));
     } else if (isEdit) {
@@ -34,14 +48,24 @@ export default function MenuGrid({ initialItems }: MenuGridProps) {
     }
   };
 
+  const handleCategorySave = (savedCategories: string[]) => {
+    setCategories(savedCategories);
+  };
+
   return (
     <div>
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end items-center gap-3 mb-6">
         <button 
           onClick={handleOpenAdd}
           className="flex items-center gap-2 bg-brand text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-brand-hover transition shadow-sm"
         >
           <Plus size={18} /> Add New Item
+        </button>
+        <button 
+          onClick={handleOpenEditCategory}
+          className="flex items-center gap-2 bg-brand text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-brand-hover transition shadow-sm"
+        >
+          <Plus size={18} /> Edit Category
         </button>
       </div>
 
@@ -69,6 +93,14 @@ export default function MenuGrid({ initialItems }: MenuGridProps) {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onSuccess={handleModalSuccess} 
+        categories={categories}
+      />
+
+      <EditCategoryModal
+        categories={categories}
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSave={handleCategorySave}
       />
     </div>
   );
