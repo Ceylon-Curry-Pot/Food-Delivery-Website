@@ -5,30 +5,32 @@ import { useMemo, useState } from 'react';
 import SectionHeader from '@/components/home/SectionHeader';
 import MenuFilters from './MenuFilters';
 import MenuGrid from './MenuGrid';
-import {
-  menuCategories,
-  type MenuDish,
-  type MenuCategory,
-} from '@/lib/menu';
+import { type MenuDish, type MenuCategory } from '@/lib/menu';
 import { useCartStore } from '@/components/global/useCartStore';
 
 type Props = {
   dishes: MenuDish[];
+  categories: MenuCategory[];
 };
 
-export default function MenuSection({ dishes }: Props) {
+export default function MenuSection({ dishes, categories }: Props) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] =
     useState<MenuCategory>('All');
 
   const addItem = useCartStore((state) => state.addItem);
 
+  const resolvedActiveCategory =
+    activeCategory === 'All' || categories.includes(activeCategory)
+      ? activeCategory
+      : 'All';
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
 
     return dishes.filter((d) => {
       const matchesCategory =
-        activeCategory === 'All' ? true : d.category === activeCategory;
+        resolvedActiveCategory === 'All' ? true : d.category === resolvedActiveCategory;
 
       const matchesSearch =
         q.length === 0
@@ -38,7 +40,7 @@ export default function MenuSection({ dishes }: Props) {
 
       return matchesCategory && matchesSearch;
     });
-  }, [dishes, search, activeCategory]);
+  }, [dishes, search, resolvedActiveCategory]);
 
   const handleAdd = (dish: MenuDish) => {
     addItem({
@@ -60,11 +62,11 @@ export default function MenuSection({ dishes }: Props) {
       <MenuFilters
         search={search}
         onSearchChange={setSearch}
-        categories={menuCategories.filter(
+        categories={['All', ...categories].filter(
           (category) =>
             category === 'All' || dishes.some((dish) => dish.category === category)
         )}
-        activeCategory={activeCategory}
+        activeCategory={resolvedActiveCategory}
         onCategoryChange={setActiveCategory}
       />
 

@@ -2,18 +2,31 @@ export const dynamic = "force-dynamic";
 
 import connectToDatabase from "@/lib/mongodb";
 import MenuItem from "@/lib/models/MenuItem";
+import { getMenuCategories } from "@/lib/menuCategories";
 import MenuGrid from "./_components/MenuGrid";
 
 export default async function MenuManagementPage() {
   await connectToDatabase();
-  const items = await MenuItem.find().sort({ category: 1, name: 1 }).lean();
+  const items = (await MenuItem.find().sort({ category: 1, name: 1 }).lean()) as Array<{
+    name: string;
+    price: number;
+    category: string;
+    description?: string;
+    available?: boolean;
+    image?: string;
+    _id: { toString(): string };
+    createdAt?: Date;
+    updatedAt?: Date;
+    [key: string]: unknown;
+  }>;
+  const categories = await getMenuCategories();
   
   // Serialize ObjectIds
-  const serializedItems = items.map((i: any) => ({
-    ...i,
-    _id: i._id.toString(),
-    createdAt: i.createdAt.toISOString(),
-    updatedAt: i.updatedAt.toISOString(),
+  const serializedItems = items.map((item) => ({
+    ...item,
+    _id: item._id.toString(),
+    createdAt: item.createdAt?.toISOString(),
+    updatedAt: item.updatedAt?.toISOString(),
   }));
 
   return (
@@ -25,7 +38,7 @@ export default async function MenuManagementPage() {
         </div>
       </div>
       
-      <MenuGrid initialItems={serializedItems} />
+      <MenuGrid initialItems={serializedItems} initialCategories={categories} />
     </div>
   );
 }
