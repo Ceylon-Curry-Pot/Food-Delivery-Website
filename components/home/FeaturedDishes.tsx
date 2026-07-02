@@ -44,8 +44,8 @@ export default function FeaturedDishes({ dishes }: Props) {
           />
 
           {dishes.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-              {dishes.slice(0, 4).map((dish) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {dishes.slice(0, 6).map((dish) => (
                 <DishCard key={dish.id} {...dish} onAdd={handleAddToCart} />
               ))}
             </div>

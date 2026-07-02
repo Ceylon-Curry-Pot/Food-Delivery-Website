@@ -13,7 +13,7 @@ async function getFeaturedDishes() {
 
   const items = await MenuItem.find({ available: true })
     .sort({ createdAt: -1 })
-    .limit(4)
+    .limit(6)
     .lean();
 
   return items.map((item) => toMenuDish(item as MenuItemRecord));
