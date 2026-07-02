@@ -115,13 +115,13 @@ export default function Footer({ onStaffPortalClick }: FooterProps) {
                 >
                   <Instagram className="w-4 h-4" />
                 </a>
-                <a
+                {/* <a
                   href="#"
                   className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-600 hover:border-red-600 transition-all duration-200 cursor-pointer"
                   aria-label="Twitter"
                 >
                   <Twitter className="w-4 h-4" />
-                </a>
+                </a> */}
               </div>
             </div>
           </div>

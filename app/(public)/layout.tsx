@@ -1,6 +1,5 @@
 import Navbar from '@/components/navbar/Navbar';
 import Footer from '@/components/global/Footer';
-import HoursAndLocation from '@/components/global/HoursAndLocation';
 
 export default function PublicLayout({
   children,
@@ -11,7 +10,6 @@ export default function PublicLayout({
     <>
       <Navbar />
       {children}
-      <HoursAndLocation />
       <Footer />
     </>
   );
