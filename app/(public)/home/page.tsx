@@ -4,6 +4,7 @@ import FeaturedDishes from '@/components/home/FeaturedDishes';
 import connectToDatabase from '@/lib/mongodb';
 import MenuItem from '@/lib/models/MenuItem';
 import { toMenuDish, type MenuItemRecord } from '@/lib/menu';
+import HoursAndLocation from '@/components/global/HoursAndLocation';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,7 +14,7 @@ async function getFeaturedDishes() {
 
   const items = await MenuItem.find({ available: true })
     .sort({ createdAt: -1 })
-    .limit(4)
+    .limit(6)
     .lean();
 
   return items.map((item) => toMenuDish(item as MenuItemRecord));
@@ -26,6 +27,8 @@ export default async function HomePage() {
     <main>
       <Hero />
       <FeaturedDishes dishes={dishes} />
+      <HoursAndLocation />
+
     </main>
   );
 }

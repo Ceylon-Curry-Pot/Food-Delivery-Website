@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ShoppingCart, Check } from 'lucide-react';
+import Image from 'next/image';
 
 export type DishCardProps = {
   id: string;
@@ -14,13 +15,6 @@ export type DishCardProps = {
 
 type Props = DishCardProps & { onAdd?: (id: string) => void };
 
-const BADGE_STYLES: Record<string, string> = {
-  Featured:   'bg-red-600 text-white',
-  Popular:    'bg-amber-500 text-white',
-  Vegetarian: 'bg-emerald-500 text-white',
-  Premium:    'bg-gray-900 text-white',
-};
-
 export default function DishCard({ id, name, description, price, image, badge = '', onAdd }: Props) {
   const [added, setAdded] = useState(false);
 
@@ -30,52 +24,57 @@ export default function DishCard({ id, name, description, price, image, badge = 
     setTimeout(() => setAdded(false), 1400);
   };
 
+  const shortDesc = Array.isArray(description) ? description.join(', ') : description;
+
   return (
-    <div className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:border-gray-200 transition-all duration-300 hover:-translate-y-1 flex flex-col">
+    <div className="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col h-full">
       {/* Image */}
-      <div className="relative h-52 overflow-hidden bg-gray-100">
+      <div className="relative h-56 overflow-hidden bg-gray-50">
         {badge && (
-          <span className={`absolute top-3 left-3 z-10 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm ${BADGE_STYLES[badge] ?? 'bg-gray-600 text-white'}`}>
+          <span
+            className={`absolute top-3 left-3 z-10 text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm ${
+              badge === 'Unavailable' ? 'bg-gray-500 text-white' : 'bg-red-600 text-white'
+            }`}
+          >
             {badge}
           </span>
         )}
-        <img
+        <Image
           src={image}
           alt={name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover group-hover:scale-110 transition-transform duration-300 ease-out"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
       {/* Body */}
       <div className="p-5 flex flex-col flex-1">
-        <h3 className="font-heading text-base font-bold text-gray-900 mb-2.5 leading-snug">{name}</h3>
+        <h3 className="font-heading text-lg font-semibold text-gray-900 group-hover:text-red-600 transition-colors duration-200 mb-2 leading-snug">
+          {name}
+        </h3>
 
-        <ul className="space-y-1 mb-4 flex-1">
-          {description.map((item, i) => (
-            <li key={i} className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="w-1 h-1 rounded-full bg-red-400 flex-shrink-0" />
-              {item}
-            </li>
-          ))}
-        </ul>
+        <p className="text-sm text-gray-500 mb-5 flex-1 line-clamp-2">
+          {shortDesc}
+        </p>
 
         <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-auto">
-          <div>
-            <span className="text-[10px] text-gray-400 font-medium">RS.</span>
-            <span className="text-xl font-bold text-gray-900 ml-0.5">{price.toLocaleString()}</span>
+          <div className="text-red-600 font-bold text-lg">
+            <span className="text-xs font-semibold mr-0.5">Rs.</span>
+            <span>{price.toLocaleString()}</span>
           </div>
 
           <button
             onClick={handleAdd}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 shadow-sm
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm
               ${added
                 ? 'bg-emerald-500 text-white scale-95'
-                : 'bg-red-600 text-white hover:bg-red-700 hover:shadow-md active:scale-95'
+                : 'bg-red-600 text-white hover:bg-red-700 hover:scale-105 active:scale-95'
               }`}
           >
             {added ? <Check className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
-            {added ? 'Added!' : 'Add'}
+            {added ? 'Added!' : 'Order'}
           </button>
         </div>
       </div>
