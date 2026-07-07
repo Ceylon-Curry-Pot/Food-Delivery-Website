@@ -6,8 +6,6 @@ import {
   MapPin,
   Facebook,
   Instagram,
-  Twitter,
-  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -66,13 +64,13 @@ export default function Footer({ onStaffPortalClick }: FooterProps) {
               </h4>
               <ul className="space-y-3.5 text-sm">
                 <li className="flex items-start gap-3">
-                  <MapPin className="w-4.5 h-4.5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <MapPin className="w-4.5 h-4.5 text-red-600 mt-0.5 shrink-0" />
                   <span className="text-gray-400">
                     Liberty Plaza Food Court, Colombo, Sri Lanka
                   </span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Phone className="w-4.5 h-4.5 text-red-600 flex-shrink-0" />
+                  <Phone className="w-4.5 h-4.5 text-red-600 shrink-0" />
                   <a
                     href="tel:0778282112"
                     className="hover:text-red-600 transition-colors duration-200 text-gray-400"
@@ -81,7 +79,7 @@ export default function Footer({ onStaffPortalClick }: FooterProps) {
                   </a>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Mail className="w-4.5 h-4.5 text-red-600 flex-shrink-0" />
+                  <Mail className="w-4.5 h-4.5 text-red-600 shrink-0" />
                   <a
                     href="mailto:ceyloncurrypot.lk@gmail.com"
                     className="hover:text-red-600 transition-colors duration-200 text-gray-400"
@@ -115,13 +113,6 @@ export default function Footer({ onStaffPortalClick }: FooterProps) {
                 >
                   <Instagram className="w-4 h-4" />
                 </a>
-                {/* <a
-                  href="#"
-                  className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-600 hover:border-red-600 transition-all duration-200 cursor-pointer"
-                  aria-label="Twitter"
-                >
-                  <Twitter className="w-4 h-4" />
-                </a> */}
               </div>
             </div>
           </div>
@@ -136,6 +127,13 @@ export default function Footer({ onStaffPortalClick }: FooterProps) {
               className="hover:text-red-600 transition-colors duration-200"
             >
               Privacy Policy
+            </Link>
+            <span className="text-white/10">·</span>
+            <Link
+              href="/refund-policy"
+              className="hover:text-red-600 transition-colors duration-200"
+            >
+              Refund Policy
             </Link>
             <span className="text-white/10">·</span>
             <Link
