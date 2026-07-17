@@ -1,19 +1,38 @@
 "use client";
 
 import { Edit2 } from "lucide-react";
+import Image from "next/image";
+import type { MenuItemRecord } from "@/lib/menu";
+
+type AdminMenuItem = Omit<MenuItemRecord, '_id'> & {
+  _id: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 interface MenuItemCardProps {
-  item: any;
-  onEdit: (item: any) => void;
+  item: AdminMenuItem;
+  onEdit: (item: AdminMenuItem) => void;
 }
 
 export default function MenuItemCard({ item, onEdit }: MenuItemCardProps) {
+  const imageUrl = item.imageUrl || item.image;
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex gap-4 transition hover:shadow-md h-full">
-      {item.image ? (
-        <img src={item.image} alt={item.name} className="w-20 h-20 rounded-lg object-cover bg-gray-100 flex-shrink-0" />
+      {imageUrl ? (
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+          <Image
+            src={imageUrl}
+            alt={item.name}
+            fill
+            sizes="80px"
+            unoptimized
+            className="object-cover"
+          />
+        </div>
       ) : (
-        <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0 text-xs">
+        <div className="h-20 w-20 shrink-0 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
           No image
         </div>
       )}

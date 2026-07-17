@@ -1,5 +1,17 @@
 import type { NextConfig } from 'next';
 
+const r2PublicUrl = process.env.R2_PUBLIC_URL;
+const r2RemotePattern = r2PublicUrl
+  ? (() => {
+      const url = new URL(r2PublicUrl);
+      return {
+        protocol: url.protocol.replace(':', '') as 'http' | 'https',
+        hostname: url.hostname,
+        pathname: '/**',
+      };
+    })()
+  : null;
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -11,11 +23,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'plus.unsplash.com',
       },
-      {
-        // Allow any HTTPS image URL for menu items uploaded by admin
-        protocol: 'https',
-        hostname: '**',
-      },
+      ...(r2RemotePattern ? [r2RemotePattern] : []),
     ],
   },
 };

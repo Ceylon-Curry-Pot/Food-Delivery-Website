@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 // scripts/seedMenuItems.js
 // Run with: node scripts/seedMenuItems.js
 // This script seeds menu items into MongoDB
@@ -26,6 +28,8 @@ const MenuItemSchema = new mongoose.Schema(
     },
     description: { type: String },
     available: { type: Boolean, default: true },
+    imageUrl: { type: String },
+    previousImageUrl: { type: String },
     image: { type: String }
   },
   { timestamps: true }
@@ -41,6 +45,7 @@ const menuItems = [
     category: 'Rice & Curry',
     price: 1850,
     description: 'Red pork boneless curry, 4 vegetable choices, Steamed yellow rice',
+    imageUrl: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&h=400&fit=crop&q=80',
     image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&h=400&fit=crop&q=80',
     available: true,
   },
@@ -49,6 +54,7 @@ const menuItems = [
     category: 'Rice & Curry',
     price: 1750,
     description: 'Black pork boneless curry, 4 vegetable choices, Steamed white rice',
+    imageUrl: 'https://images.unsplash.com/photo-1631292784640-2b24be784d5d?w=600&h=400&fit=crop&q=80',
     image: 'https://images.unsplash.com/photo-1631292784640-2b24be784d5d?w=600&h=400&fit=crop&q=80',
     available: true,
   },
@@ -57,6 +63,7 @@ const menuItems = [
     category: 'Biryani',
     price: 1650,
     description: 'Fragrant basmati rice, Tender chicken pieces, Raita & pickle',
+    imageUrl: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&h=400&fit=crop&q=80',
     image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&h=400&fit=crop&q=80',
     available: true,
   },
@@ -65,6 +72,7 @@ const menuItems = [
     category: 'Kottu',
     price: 1250,
     description: 'Mixed vegetables, Chopped roti & egg, Spiced gravy',
+    imageUrl: 'https://images.unsplash.com/photo-1567337710282-00832b415979?w=600&h=400&fit=crop&q=80',
     image: 'https://images.unsplash.com/photo-1567337710282-00832b415979?w=600&h=400&fit=crop&q=80',
     available: true,
   },
@@ -73,6 +81,7 @@ const menuItems = [
     category: 'Kottu',
     price: 1550,
     description: 'Shredded chicken, Chopped roti, egg & veg, Signature spice mix',
+    imageUrl: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=600&h=400&fit=crop&q=80',
     image: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=600&h=400&fit=crop&q=80',
     available: true,
   },
@@ -81,6 +90,7 @@ const menuItems = [
     category: 'Kottu',
     price: 1650,
     description: 'Slow-cooked beef, Roti, eggs & vegetables, Rich gravy base',
+    imageUrl: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=600&h=400&fit=crop&q=80',
     image: 'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=600&h=400&fit=crop&q=80',
     available: true,
   },
@@ -89,6 +99,7 @@ const menuItems = [
     category: 'Hoppers',
     price: 350,
     description: 'Crispy bowl-shaped hopper, Farm-fresh egg centre, Coconut sambol',
+    imageUrl: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=600&h=400&fit=crop&q=80',
     image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=600&h=400&fit=crop&q=80',
     available: true,
   },
@@ -97,6 +108,7 @@ const menuItems = [
     category: 'Rice & Curry',
     price: 1450,
     description: 'Spiced ambul thiyal fish, Coconut rice, Dhal & 3 vegetables',
+    imageUrl: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600&h=400&fit=crop&q=80',
     image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600&h=400&fit=crop&q=80',
     available: true,
   },
@@ -105,6 +117,7 @@ const menuItems = [
     category: 'Rice & Curry',
     price: 2200,
     description: 'Dutch-Burgher classic, Meatball, cutlet & frikkadels, Baked in banana leaf',
+    imageUrl: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80',
     image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=600&h=400&fit=crop&q=80',
     available: true,
   },
@@ -113,6 +126,7 @@ const menuItems = [
     category: 'Rice & Curry',
     price: 950,
     description: 'Fresh coconut sambol, Dhal curry & rice, Seasonal greens',
+    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80',
     image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=400&fit=crop&q=80',
     available: true,
   },

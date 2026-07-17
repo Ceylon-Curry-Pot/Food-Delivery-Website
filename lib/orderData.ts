@@ -14,6 +14,7 @@ type DbMenuItem = {
   _id: mongoose.Types.ObjectId;
   name: string;
   price: number;
+  imageUrl?: string;
   image?: string;
 };
 
@@ -109,7 +110,7 @@ export async function buildOrderItems(items: IncomingOrderItem[], requireAvailab
     return {
       menuItem: menuItem._id,
       name: menuItem.name,
-      image: menuItem.image,
+      image: menuItem.imageUrl || menuItem.image,
       qty,
       price: menuItem.price,
     };
