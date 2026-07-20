@@ -254,7 +254,7 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, cat
                   className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-red-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-red-700"
                 />
                 <p className="text-xs text-gray-400">
-                  Upload a new image to send it directly to R2. Leave this empty to keep the current image when editing.
+                  Upload a new image or leave this empty to keep the current image when editing.
                 </p>
                 {imageFile && (
                   <button

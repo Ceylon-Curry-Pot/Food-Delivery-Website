@@ -57,7 +57,7 @@ export async function PATCH(
       const previousImageUrl = existingItem.imageUrl || existingItem.image || '';
       const buffer = Buffer.from(await imageFile.arrayBuffer());
       const extension = getFileExtension(imageFile.name, imageFile.type);
-      const key = `menu-items/${id}-${crypto.randomUUID()}.${extension}`;
+      const key = `menu-items/${imageFile.name}.${extension}`;
       const uploadedUrl = await uploadToR2(key, buffer, imageFile.type || 'application/octet-stream');
 
       updateData.imageUrl = uploadedUrl;
