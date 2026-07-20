@@ -1,6 +1,18 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import MenuItem from '@/lib/models/MenuItem';
+import { getR2PublicBaseUrl, uploadToR2 } from '@/lib/r2';
+
+export const runtime = 'nodejs';
+
+type MenuItemPayload = {
+  name?: string;
+  price?: string | number;
+  category?: string;
+  description?: string;
+  available?: string | boolean;
+  imageUrl?: string;
+};
 
 // GET /api/menu — list all menu items
 export async function GET() {
@@ -17,8 +29,8 @@ export async function GET() {
 // POST /api/menu — create new menu item
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { name, price, category, description, available, image } = body;
+    const { payload, imageFile } = await readMenuItemRequest(req);
+    const { name, price, category, description, available } = payload;
 
     if (!name || !category) {
       return NextResponse.json({ message: 'Name and category are required' }, { status: 400 });
@@ -31,13 +43,19 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
+    const uploadedImageUrl = await resolveImageUrlFromUpload(imageFile, payload.imageUrl);
+    if (payload.imageUrl?.trim() && !uploadedImageUrl) {
+      return NextResponse.json({ message: 'Images must be uploaded to R2 before saving' }, { status: 400 });
+    }
+
     const item = await MenuItem.create({
       name:        name.trim(),
       price:       parsedPrice,
       category,
       description: typeof description === 'string' ? description.trim() : '',
-      available:   available ?? true,
-      image:       image?.trim() || '',
+      available:   parseBoolean(available, true),
+      imageUrl:    uploadedImageUrl ?? '',
+      image:       uploadedImageUrl ?? '',
     });
 
     // Fetch as lean to get a plain serializable object (same shape as GET)
@@ -66,6 +84,76 @@ export async function POST(req: Request) {
 }
 
 // ── Helper ──────────────────────────────────────────────────────────────────
+async function readMenuItemRequest(req: Request): Promise<{ payload: MenuItemPayload; imageFile: File | null }> {
+  const contentType = req.headers.get('content-type') || '';
+
+  if (contentType.includes('multipart/form-data')) {
+    const formData = await req.formData();
+    const file = formData.get('imageFile');
+
+    return {
+      payload: {
+        name: formData.get('name')?.toString(),
+        price: formData.get('price')?.toString(),
+        category: formData.get('category')?.toString(),
+        description: formData.get('description')?.toString() || '',
+        available: formData.get('available')?.toString() || 'true',
+        imageUrl: formData.get('imageUrl')?.toString() || '',
+      },
+      imageFile: file instanceof File && file.size > 0 ? file : null,
+    };
+  }
+
+  const body = (await req.json()) as MenuItemPayload;
+  return {
+    payload: body,
+    imageFile: null,
+  };
+}
+
+function parseBoolean(value: string | boolean | undefined, fallback: boolean) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value !== 'string') return fallback;
+
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return fallback;
+}
+
+async function resolveImageUrlFromUpload(imageFile: File | null, imageUrl?: string) {
+  if (imageFile) {
+    const buffer = Buffer.from(await imageFile.arrayBuffer());
+    const extension = getFileExtension(imageFile.name, imageFile.type);
+    const key = `menu-items/new-${crypto.randomUUID()}.${extension}`;
+    return uploadToR2(key, buffer, imageFile.type || 'application/octet-stream');
+  }
+
+  const trimmed = imageUrl?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  if (!trimmed.startsWith(getR2PublicBaseUrl())) {
+    return undefined;
+  }
+
+  return trimmed;
+}
+
+function getFileExtension(fileName: string, contentType: string) {
+  const match = fileName.match(/\.([a-zA-Z0-9]+)$/);
+  if (match) {
+    return match[1].toLowerCase();
+  }
+
+  if (contentType === 'image/png') return 'png';
+  if (contentType === 'image/webp') return 'webp';
+  if (contentType === 'image/gif') return 'gif';
+  if (contentType === 'image/avif') return 'avif';
+
+  return 'jpg';
+}
+
 function serializeItem(item: Record<string, unknown> & { _id?: unknown; createdAt?: unknown; updatedAt?: unknown }) {
   return {
     ...item,

@@ -32,7 +32,9 @@ export type MenuItemRecord = {
   price: number;
   category: Exclude<MenuCategory, 'All'>;
   description?: string | string[];
+  imageUrl?: string;
   image?: string;
+  previousImageUrl?: string;
   available?: boolean;
 };
 
@@ -54,7 +56,7 @@ export function toMenuDish(item: MenuItemRecord): MenuDish {
     name: item.name,
     description: splitMenuDescription(item.description),
     price: item.price,
-    image: item.image || DEFAULT_MENU_IMAGE,
+    image: item.imageUrl || item.image || DEFAULT_MENU_IMAGE,
     category: item.category,
     badge: item.available === false ? 'Unavailable' : undefined,
   };
