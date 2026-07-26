@@ -13,7 +13,9 @@ export default async function MenuManagementPage() {
     category: string;
     description?: string;
     available?: boolean;
+    imageUrl?: string;
     image?: string;
+    previousImageUrl?: string;
     _id: { toString(): string };
     createdAt?: Date;
     updatedAt?: Date;

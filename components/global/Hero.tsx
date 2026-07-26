@@ -1,10 +1,28 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 
+const heroImages = [
+  '/bg1.webp',
+  '/bg2.webp',
+  '/bg3.webp',
+  '/bg4.webp',
+];
+
 export default function Hero() {
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setActiveImageIndex((currentIndex) => (currentIndex + 1) % heroImages.length);
+    }, 5000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -27,17 +45,33 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-[92vh] md:min-h-screen flex items-center justify-center overflow-hidden bg-neutral-950">
-      {/* Background Image */}
-      <Image
-        src="/hero_bg.png"
-        alt="Ceylon Curry Pot Atmosphere"
-        fill
-        priority
-        className="object-cover object-center pointer-events-none"
-      />
+      {/* Background slideshow */}
+      <div className="absolute inset-0">
+        {heroImages.map((src, index) => (
+          <motion.div
+            key={src}
+            className="absolute inset-0"
+            initial={false}
+            animate={{
+              opacity: index === activeImageIndex ? 1 : 0,
+              scale: index === activeImageIndex ? 1.03 : 1.08,
+            }}
+            transition={{ duration: 1.2, ease: 'easeInOut' }}
+          >
+            <Image
+              src={src}
+              alt="Ceylon Curry Pot food photography"
+              fill
+              priority={index === 0}
+              sizes="100vw"
+              className="object-cover object-center pointer-events-none"
+            />
+          </motion.div>
+        ))}
+      </div>
 
       {/* Dark gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-black/85 z-10" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/50 via-black/60 to-black/85 z-10" />
 
       {/* Content */}
       <motion.div

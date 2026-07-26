@@ -12,7 +12,7 @@ export default function TermsPage() {
     <main className="bg-gray-50 min-h-screen">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="bg-gradient-to-r from-red-600 via-red-500 to-orange-500">
+        <div className="bg-linear-to-r from-red-600 via-red-500 to-orange-500">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 text-center text-white">
             <div className="inline-flex items-center gap-3 mb-5">
               <span className="w-8 h-0.5 bg-white/70" />
@@ -70,7 +70,7 @@ export default function TermsPage() {
                 'Order confirmation is sent via the on-screen tracker page. An order is only confirmed once you receive an order number (starting with CEY).',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-gray-600">
-                  <span className="mt-1.5 w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                  <span className="mt-1.5 w-2 h-2 rounded-full bg-red-400 shrink-0" />
                   {item}
                 </li>
               ))}
@@ -96,7 +96,7 @@ export default function TermsPage() {
                 'Internet Banking — Vishwa and other supported banks via PayHere',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-gray-600">
-                  <span className="mt-1.5 w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                  <span className="mt-1.5 w-2 h-2 rounded-full bg-red-400 shrink-0" />
                   {item}
                 </li>
               ))}
@@ -121,7 +121,7 @@ export default function TermsPage() {
                 'If you are not present at the delivery address and cannot be reached, the rider will wait for a reasonable time (up to 5 minutes) then the order will be returned and a refund may not be issued for COD orders.',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-gray-600">
-                  <span className="mt-1.5 w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                  <span className="mt-1.5 w-2 h-2 rounded-full bg-red-400 shrink-0" />
                   {item}
                 </li>
               ))}
@@ -130,22 +130,14 @@ export default function TermsPage() {
 
           <PolicySection number="6" title="Cancellations & Refunds">
             <p>
-              Due to the perishable nature of food:
+              Cancellations are only possible before preparation begins, which is usually
+              within 5–10 minutes of order confirmation. For the full policy, including
+              refund timelines, complaint handling, and PayHere refund details, please
+              visit our{' '}
+              <Link href="/refund-policy" className="text-red-600 hover:underline font-medium">
+                Cancellations &amp; Refunds Policy
+              </Link>.
             </p>
-            <ul className="list-none space-y-2 mt-3">
-              {[
-                'Orders cannot be cancelled once preparation has begun (typically within 5–10 minutes of confirmation).',
-                'If we are unable to fulfil your order for any reason, a full refund will be issued to your original payment method within 5–7 business days.',
-                'Refunds for online payments are processed through PayHere back to your card or wallet.',
-                'Complaints about order quality or missing items must be raised within 30 minutes of delivery by calling 077 828 2112.',
-                'We reserve the right to offer a replacement order or a partial/full refund at our discretion for valid complaints.',
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-gray-600">
-                  <span className="mt-1.5 w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
           </PolicySection>
 
           <PolicySection number="7" title="Allergen Disclaimer">
@@ -219,7 +211,7 @@ function PolicySection({
   return (
     <section>
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-7 h-7 rounded-lg bg-red-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-red-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
           {number}
         </div>
         <h2 className="font-heading text-xl font-bold text-gray-900">{title}</h2>

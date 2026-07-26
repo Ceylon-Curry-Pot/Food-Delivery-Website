@@ -2,6 +2,8 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
+import Image from 'next/image';
 import CheckoutHeader from '@/components/checkout/CheckoutHeader';
 import ContactForm, { type ContactFormHandle } from '@/components/checkout/ContactForm';
 import DeliveryAddressForm, { type DeliveryAddressFormHandle } from '@/components/checkout/DeliveryAddressForm';
@@ -112,6 +114,10 @@ export default function CheckoutPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 py-10">
+      {/* <Script
+        src="https://www.payhere.lk/lib/payhere.js"
+        strategy="afterInteractive"
+      /> */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
           <section className="space-y-5">
@@ -139,7 +145,7 @@ export default function CheckoutPage() {
                     className={`w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all
                       ${payMethod === m.id ? 'border-red-400 bg-red-50' : 'border-gray-200 hover:border-gray-300'}`}
                   >
-                    <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all
+                    <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center transition-all
                       ${payMethod === m.id ? 'border-red-600 bg-red-600' : 'border-gray-300'}`}>
                       {payMethod === m.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </div>
@@ -164,7 +170,13 @@ export default function CheckoutPage() {
                 <div className="space-y-3 mb-5">
                   {items.map((item) => (
                     <div key={item.id} className="flex items-center gap-3">
-                      <img src={item.image} alt={item.name} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        width={48}
+                        height={48}
+                        className="w-12 h-12 rounded-xl object-cover shrink-0"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
                         <p className="text-xs text-gray-400">Qty: {item.quantity}</p>

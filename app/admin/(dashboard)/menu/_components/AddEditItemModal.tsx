@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { X, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Trash2, Upload, X } from "lucide-react";
+import Image from "next/image";
 import type { MenuItemRecord } from "@/lib/menu";
 type AdminMenuItem = Omit<MenuItemRecord, '_id'> & {
   _id: string;
@@ -23,7 +24,6 @@ interface FormData {
   category: string;
   description: string;
   available: boolean;
-  image: string;
 }
 
 const createEmptyForm = (category = ''): FormData => ({
@@ -32,7 +32,6 @@ const createEmptyForm = (category = ''): FormData => ({
   category,
   description: '',
   available:   true,
-  image:       '',
 });
 
 export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, categories }: AddEditItemModalProps) {
@@ -41,6 +40,8 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, cat
   const [deleting, setDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [formData, setFormData] = useState<FormData>(createEmptyForm(categories[0] ?? ''));
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
 
   const categoryOptions = useMemo(() => {
     if (item?.category && !categories.includes(item.category)) {
@@ -62,12 +63,23 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, cat
           ? item.description.join(', ')
           : (item.description ?? ''),
         available:   item.available   ?? true,
-        image:       item.image       ?? '',
       });
+      setImageFile(null);
+      setImagePreview(item.imageUrl || item.image || '');
     } else {
       setFormData(createEmptyForm(categories[0] ?? ''));
+      setImageFile(null);
+      setImagePreview('');
     }
   }, [item, isOpen, categories, categoryOptions]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   if (!isOpen) return null;
 
@@ -83,22 +95,23 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, cat
 
     setLoading(true);
     try {
-      const payload = {
-        name:        formData.name.trim(),
-        price:       parsedPrice,
-        category:    formData.category,
-        description: formData.description.trim(),
-        available:   formData.available,
-        image:       formData.image.trim(),
-      };
-
       const url    = isEdit ? `/api/menu/${item._id}` : '/api/menu';
       const method = isEdit ? 'PATCH' : 'POST';
+      const payload = new FormData();
+
+      payload.append('name', formData.name.trim());
+      payload.append('price', String(parsedPrice));
+      payload.append('category', formData.category);
+      payload.append('description', formData.description.trim());
+      payload.append('available', String(formData.available));
+
+      if (imageFile) {
+        payload.append('imageFile', imageFile);
+      }
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
+        body: payload,
       });
 
       const data = await res.json();
@@ -141,6 +154,21 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, cat
 
   const set = (key: keyof FormData, value: string | boolean) =>
     setFormData((prev) => ({ ...prev, [key]: value }));
+
+  const handleFileChange = (file: File | null) => {
+    setImageFile(file);
+
+    if (imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
+    if (!file) {
+      setImagePreview(item?.imageUrl || item?.image || '');
+      return;
+    }
+
+    setImagePreview(URL.createObjectURL(file));
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -202,14 +230,43 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, cat
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL (Optional)</label>
-            <input
-              type="url"
-              placeholder="https://..."
-              value={formData.image}
-              onChange={(e) => set('image', e.target.value)}
-              className="w-full border rounded-lg p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Menu Image {isEdit ? '(replace optional)' : '(optional)'}</label>
+            <div className="flex items-start gap-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4">
+              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-white border border-gray-200 flex items-center justify-center">
+                {imagePreview ? (
+                  <Image
+                    src={imagePreview}
+                    alt="Selected menu item"
+                    fill
+                    sizes="96px"
+                    unoptimized
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="text-[11px] text-gray-400 text-center px-2">No image selected</span>
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+                  className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-red-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-red-700"
+                />
+                <p className="text-xs text-gray-400">
+                  Upload a new image or leave this empty to keep the current image when editing.
+                </p>
+                {imageFile && (
+                  <button
+                    type="button"
+                    onClick={() => handleFileChange(null)}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-red-600"
+                  >
+                    <Upload size={14} /> Remove selected file
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
           <div>

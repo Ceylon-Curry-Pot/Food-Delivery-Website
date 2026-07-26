@@ -8,6 +8,8 @@ export interface IMenuItem extends Document {
   category: MenuCategory;
   description?: string;
   available: boolean;
+  imageUrl?: string;
+  previousImageUrl?: string;
   image?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -20,6 +22,8 @@ const MenuItemSchema = new Schema<IMenuItem>(
     category: { type: String, required: true },
     description: { type: String },
     available: { type: Boolean, default: true },
+    imageUrl: { type: String },
+    previousImageUrl: { type: String },
     image: { type: String }
   },
   { timestamps: true }
