@@ -1,28 +1,24 @@
-// ── Loyalty API abstraction layer ──────────────────────────────────────────
-// The backend developer only needs to touch this file.
-// Replace each mock implementation with a real fetch() call to your endpoints.
-
 import type { LoyaltyMember } from '@/components/loyalty/useLoyaltyStore';
 
 export type SignInPayload = {
-  email: string;
+  email:    string;
   password: string;
 };
 
 export type SignUpPayload = {
-  name: string;
-  email: string;
-  phone: string;
+  name:     string;
+  email:    string;
+  phone:    string;
+  birthday: string;   // ISO date e.g. "1995-08-15"
   password: string;
 };
 
 // ── Sign In ────────────────────────────────────────────────────────────────
 // TODO (backend): Replace with → POST /api/loyalty/signin
 export async function loyaltySignIn(payload: SignInPayload): Promise<LoyaltyMember> {
-  // Simulate network delay
   await new Promise((r) => setTimeout(r, 1000));
 
-  // ── MOCK — delete everything below and replace with: ──
+  // Replace this block with:
   // const res = await fetch('/api/loyalty/signin', {
   //   method: 'POST',
   //   headers: { 'Content-Type': 'application/json' },
@@ -37,10 +33,11 @@ export async function loyaltySignIn(payload: SignInPayload): Promise<LoyaltyMemb
   if (!payload.email || !payload.password) throw new Error('Invalid email or password');
 
   return {
-    id:           'demo-signin-' + Date.now(),
+    id:           'demo-' + Date.now(),
     name:         'Amal Perera',
     email:        payload.email,
     phone:        '077 828 2112',
+    birthday:     '1995-08-15',
     points:       1240,
     tier:         'Saffron',
     memberSince:  '2024-03-15T00:00:00.000Z',
@@ -53,7 +50,7 @@ export async function loyaltySignIn(payload: SignInPayload): Promise<LoyaltyMemb
 export async function loyaltySignUp(payload: SignUpPayload): Promise<LoyaltyMember> {
   await new Promise((r) => setTimeout(r, 1200));
 
-  // ── MOCK — delete everything below and replace with: ──
+  // Replace this block with:
   // const res = await fetch('/api/loyalty/signup', {
   //   method: 'POST',
   //   headers: { 'Content-Type': 'application/json' },
@@ -61,11 +58,11 @@ export async function loyaltySignUp(payload: SignUpPayload): Promise<LoyaltyMemb
   // });
   // if (!res.ok) {
   //   const data = await res.json();
-  //   throw new Error(data.message || 'Registration failed. Email may already be in use.');
+  //   throw new Error(data.message || 'Registration failed');
   // }
   // return res.json();
 
-  if (!payload.name || !payload.email || !payload.phone || !payload.password) {
+  if (!payload.name || !payload.email || !payload.phone || !payload.birthday || !payload.password) {
     throw new Error('Please fill in all required fields');
   }
 
@@ -74,8 +71,9 @@ export async function loyaltySignUp(payload: SignUpPayload): Promise<LoyaltyMemb
     name:         payload.name,
     email:        payload.email,
     phone:        payload.phone,
-    points:       100,   // Welcome bonus
-    tier:         'Cinnamon',
+    birthday:     payload.birthday,
+    points:       100,        // Welcome bonus — starts in Clove tier
+    tier:         'Clove',
     memberSince:  new Date().toISOString(),
     memberNumber: 'CCP-' + String(Math.floor(1000 + Math.random() * 9000)),
   };
