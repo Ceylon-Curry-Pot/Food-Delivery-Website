@@ -8,11 +8,11 @@ export type LoyaltyMember = {
   name: string;
   email: string;
   phone: string;
-  birthday: string;      // ISO date e.g. "1995-08-15" — used for birthday rewards
+  birthday: string;
   tier: LoyaltyTier;
   points: number;
-  memberSince: string;   // ISO date string
-  memberNumber: string;  // e.g. "CCP-4721"
+  memberSince: string;
+  memberNumber: string;
 };
 
 type LoyaltyStore = {
@@ -48,13 +48,22 @@ export const useLoyaltyStore = create<LoyaltyStore>()(
 );
 
 // ── Tier configuration ─────────────────────────────────────────────────────
+// Earning rate: 1 point per Rs. 50 spent
+// Weekend: 2× multiplier | Birthday month: 3× multiplier
+//
+// Tier thresholds are intentionally demanding:
+//   Clove     →  0 – 249   pts  (~8  weekday orders to exit)
+//   Cinnamon  →  250 – 999 pts  (~25 more orders to exit)
+//   Saffron   →  1,000 – 3,499  (~50 more orders to exit)
+//   Cardamom  →  3,500+         (elite — roughly 1+ year of loyal ordering)
+
 export const TIER_CONFIG = {
   Clove: {
     icon:          '🌿',
     label:         'Clove',
     pointsMin:     0,
-    pointsMax:     499,
-    nextAt:        500,
+    pointsMax:     249,
+    nextAt:        250,
     discountLabel: 'Welcome Tier',
     cardFrom:      '#1C3829',
     cardVia:       '#2D5A3D',
@@ -68,19 +77,19 @@ export const TIER_CONFIG = {
       'Early event notifications',
     ],
     tablePerks: {
-      birthdayBonus:    true,
-      discountOn5k:     false,
-      higherDiscount:   false,
-      freeDelivery:     false,
-      sundayOff:        false,
-      priorityQueue:    false,
-      whatsappSupport:  false,
+      birthdayBonus:   true,
+      discountOn5k:    false,
+      higherDiscount:  false,
+      freeDelivery:    false,
+      sundayOff:       false,
+      priorityQueue:   false,
+      whatsappSupport: false,
     },
   },
   Cinnamon: {
     icon:          '🫚',
     label:         'Cinnamon',
-    pointsMin:     500,
+    pointsMin:     250,
     pointsMax:     999,
     nextAt:        1000,
     discountLabel: '5% off Rs. 5,000+ orders',
@@ -96,21 +105,21 @@ export const TIER_CONFIG = {
       'Member-only newsletter',
     ],
     tablePerks: {
-      birthdayBonus:    true,
-      discountOn5k:     true,
-      higherDiscount:   false,
-      freeDelivery:     false,
-      sundayOff:        false,
-      priorityQueue:    false,
-      whatsappSupport:  false,
+      birthdayBonus:   true,
+      discountOn5k:    true,
+      higherDiscount:  false,
+      freeDelivery:    false,
+      sundayOff:       false,
+      priorityQueue:   false,
+      whatsappSupport: false,
     },
   },
   Saffron: {
     icon:          '🌾',
     label:         'Saffron',
     pointsMin:     1000,
-    pointsMax:     4999,
-    nextAt:        5000,
+    pointsMax:     3499,
+    nextAt:        3500,
     discountLabel: '10% off Rs. 5,000+ orders',
     cardFrom:      '#9A3412',
     cardVia:       '#C2410C',
@@ -125,19 +134,19 @@ export const TIER_CONFIG = {
       'Priority order queue',
     ],
     tablePerks: {
-      birthdayBonus:    true,
-      discountOn5k:     true,
-      higherDiscount:   true,
-      freeDelivery:     true,
-      sundayOff:        false,
-      priorityQueue:    true,
-      whatsappSupport:  false,
+      birthdayBonus:   true,
+      discountOn5k:    true,
+      higherDiscount:  true,
+      freeDelivery:    true,
+      sundayOff:       false,
+      priorityQueue:   true,
+      whatsappSupport: false,
     },
   },
   Cardamom: {
     icon:          '💚',
     label:         'Cardamom',
-    pointsMin:     5000,
+    pointsMin:     3500,
     pointsMax:     Infinity,
     nextAt:        null,
     discountLabel: '10% off + Sunday 20% off',
@@ -157,28 +166,28 @@ export const TIER_CONFIG = {
       'WhatsApp concierge support',
     ],
     tablePerks: {
-      birthdayBonus:    true,
-      discountOn5k:     true,
-      higherDiscount:   true,
-      freeDelivery:     true,
-      sundayOff:        true,
-      priorityQueue:    true,
-      whatsappSupport:  true,
+      birthdayBonus:   true,
+      discountOn5k:    true,
+      higherDiscount:  true,
+      freeDelivery:    true,
+      sundayOff:       true,
+      priorityQueue:   true,
+      whatsappSupport: true,
     },
   },
 } as const;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 export function getTierForPoints(points: number): LoyaltyTier {
-  if (points >= 5000) return 'Cardamom';
+  if (points >= 3500) return 'Cardamom';
   if (points >= 1000) return 'Saffron';
-  if (points >= 500)  return 'Cinnamon';
+  if (points >= 250)  return 'Cinnamon';
   return 'Clove';
 }
 
 export function getProgressPercent(points: number, tier: LoyaltyTier): number {
   if (tier === 'Cardamom') return 100;
-  const cfg = TIER_CONFIG[tier];
+  const cfg   = TIER_CONFIG[tier];
   const range = cfg.nextAt! - cfg.pointsMin;
   return Math.min(((points - cfg.pointsMin) / range) * 100, 100);
 }
