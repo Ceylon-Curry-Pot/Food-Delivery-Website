@@ -18,7 +18,7 @@ const HOW_IT_WORKS = [
 ];
 
 const EARN_GUIDE = [
-  { emoji: '🛒', label: 'Standard purchase',  value: '1 pt / Rs. 10', highlight: false },
+  { emoji: '🛒', label: 'Standard purchase',  value: '1 pt / Rs. 50', highlight: false },
   { emoji: '📅', label: 'Weekend orders',      value: '2× points',      highlight: true  },
   { emoji: '🎂', label: 'Birthday month',      value: '3× points',      highlight: true  },
 ];
@@ -433,6 +433,7 @@ export default function LoyaltyPage() {
           </div>
 
           {/* Example calculation */}
+          {/* Example calculation */}
           <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6">
             <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 text-center">
               Example
@@ -440,22 +441,36 @@ export default function LoyaltyPage() {
             <div className="flex items-center justify-center gap-3 flex-wrap text-sm">
               <div className="bg-white rounded-xl border border-gray-200 px-4 py-2.5 text-center">
                 <p className="text-gray-400 text-xs">Order value</p>
-                <p className="font-bold text-gray-900">Rs. 1,500</p>
+                <p className="font-bold text-gray-900">Rs. 2,500</p>
               </div>
               <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
               <div className="bg-white rounded-xl border border-gray-200 px-4 py-2.5 text-center">
-                <p className="text-gray-400 text-xs">Points earned</p>
-                <p className="font-bold text-red-600">150 pts</p>
+                <p className="text-gray-400 text-xs">Weekday</p>
+                <p className="font-bold text-red-600">50 pts</p>
               </div>
               <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
               <div className="bg-white rounded-xl border border-gray-200 px-4 py-2.5 text-center">
                 <p className="text-gray-400 text-xs">On weekend</p>
-                <p className="font-bold text-red-600">300 pts 🔥</p>
+                <p className="font-bold text-red-600">100 pts 🔥</p>
+              </div>
+            </div>
+            <div className="mt-5 grid sm:grid-cols-3 gap-3 text-center text-xs">
+              <div className="bg-white rounded-xl border border-gray-100 p-3">
+                <p className="font-bold text-gray-700">Clove → Cinnamon</p>
+                <p className="text-gray-400 mt-0.5">~8 weekday orders</p>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 p-3">
+                <p className="font-bold text-gray-700">Cinnamon → Saffron</p>
+                <p className="text-gray-400 mt-0.5">~25 more orders</p>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 p-3">
+                <p className="font-bold text-gray-700">Saffron → Cardamom</p>
+                <p className="text-gray-400 mt-0.5">~50 more orders</p>
               </div>
             </div>
             <p className="text-center text-xs text-gray-400 mt-4">
-              At this rate, just 4 weekday orders puts you in Cinnamon tier.
-              2 weekend orders gets you there even faster.
+              Weekend orders earn 2× — the fastest way to climb tiers.
+              Cardamom is reserved for our most dedicated members.
             </p>
           </div>
         </div>
