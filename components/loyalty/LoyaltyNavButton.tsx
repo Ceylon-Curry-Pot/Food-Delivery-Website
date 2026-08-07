@@ -79,7 +79,7 @@ export default function LoyaltyNavButton() {
             </div>
 
             <button
-              onClick={() => { openModal('signin'); setDropOpen(false); }}
+              onClick={() => { openModal('signup'); setDropOpen(false); }}
               className="w-full text-left px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
               View Loyalty Dashboard

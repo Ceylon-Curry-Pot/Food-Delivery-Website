@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { loyaltySignOut } from '@/lib/loyaltyApi';
 
 export type LoyaltyTier = 'Clove' | 'Cinnamon' | 'Saffron' | 'Cardamom';
 
@@ -34,7 +35,11 @@ export const useLoyaltyStore = create<LoyaltyStore>()(
       openModal:  (tab = 'signin') => set({ isModalOpen: true, modalTab: tab }),
       closeModal: ()               => set({ isModalOpen: false }),
       setMember:  (member)         => set({ member, isModalOpen: false }),
-      logout:     ()               => set({ member: null }),
+      logout:     ()               => {
+        // Clear server session (fire-and-forget; UI updates immediately)
+        loyaltySignOut().catch(() => {});
+        set({ member: null });
+      },
     }),
     {
       name: 'ccp-loyalty-v1',
