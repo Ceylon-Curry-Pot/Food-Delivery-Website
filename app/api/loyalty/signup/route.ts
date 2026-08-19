@@ -2,11 +2,18 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import LoyaltyMember, { generateMemberNumber } from '@/lib/models/LoyaltyMember';
 import bcrypt from 'bcryptjs';
+import { sanitizeText, sanitizeEmail } from '@/lib/sanitize';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, phone, birthday, password } = body;
+
+    // ── Sanitize before anything else touches these values ────────────────
+    const name     = sanitizeText(body.name, 100);
+    const email    = sanitizeEmail(body.email);
+    const phone    = sanitizeText(body.phone, 20);
+    const birthday = sanitizeText(body.birthday, 10);
+    const password = typeof body.password === 'string' ? body.password : '';
 
     // ── Validation ───────────────────────────────────────────────────────
     if (!name || !email || !phone || !birthday || !password) {
@@ -16,7 +23,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (typeof password !== 'string' || password.length < 8) {
+    if (password.length < 8) {
       return NextResponse.json(
         { message: 'Password must be at least 8 characters' },
         { status: 400 }

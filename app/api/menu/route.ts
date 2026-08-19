@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import MenuItem from '@/lib/models/MenuItem';
 import { getR2PublicBaseUrl, uploadToR2 } from '@/lib/r2';
+import { validateImageUpload, buildImageKey, ImageUploadError } from '@/lib/imageUpload';
 
 export const runtime = 'nodejs';
 
@@ -43,7 +44,15 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
 
-    const uploadedImageUrl = await resolveImageUrlFromUpload(imageFile, payload.imageUrl);
+    let uploadedImageUrl: string | undefined;
+    try {
+      uploadedImageUrl = await resolveImageUrlFromUpload(imageFile, payload.imageUrl);
+    } catch (err) {
+      if (err instanceof ImageUploadError) {
+        return NextResponse.json({ message: err.message }, { status: 400 });
+      }
+      throw err;
+    }
     if (payload.imageUrl?.trim() && !uploadedImageUrl) {
       return NextResponse.json({ message: 'Images must be uploaded to R2 before saving' }, { status: 400 });
     }
@@ -123,9 +132,9 @@ function parseBoolean(value: string | boolean | undefined, fallback: boolean) {
 async function resolveImageUrlFromUpload(imageFile: File | null, imageUrl?: string) {
   if (imageFile) {
     const buffer = Buffer.from(await imageFile.arrayBuffer());
-    const extension = getFileExtension(imageFile.name, imageFile.type);
-    const key = `menu-items/new-${crypto.randomUUID()}.${extension}`;
-    return uploadToR2(key, buffer, imageFile.type || 'application/octet-stream');
+    const { contentType, extension } = validateImageUpload(imageFile, buffer);
+    const key = buildImageKey('menu-items', extension);
+    return uploadToR2(key, buffer, contentType);
   }
 
   const trimmed = imageUrl?.trim();
@@ -138,20 +147,6 @@ async function resolveImageUrlFromUpload(imageFile: File | null, imageUrl?: stri
   }
 
   return trimmed;
-}
-
-function getFileExtension(fileName: string, contentType: string) {
-  const match = fileName.match(/\.([a-zA-Z0-9]+)$/);
-  if (match) {
-    return match[1].toLowerCase();
-  }
-
-  if (contentType === 'image/png') return 'png';
-  if (contentType === 'image/webp') return 'webp';
-  if (contentType === 'image/gif') return 'gif';
-  if (contentType === 'image/avif') return 'avif';
-
-  return 'jpg';
 }
 
 function serializeItem(item: Record<string, unknown> & { _id?: unknown; createdAt?: unknown; updatedAt?: unknown }) {

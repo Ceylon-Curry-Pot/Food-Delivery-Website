@@ -3,6 +3,7 @@ import connectToDatabase from '@/lib/mongodb';
 import MenuItem from '@/lib/models/MenuItem';
 import { revalidatePath } from 'next/cache';
 import { getR2PublicBaseUrl, uploadToR2 } from '@/lib/r2';
+import { validateImageUpload, buildImageKey, ImageUploadError } from '@/lib/imageUpload';
 
 export const runtime = 'nodejs';
 
@@ -56,9 +57,20 @@ export async function PATCH(
     if (imageFile) {
       const previousImageUrl = existingItem.imageUrl || existingItem.image || '';
       const buffer = Buffer.from(await imageFile.arrayBuffer());
-      const extension = getFileExtension(imageFile.name, imageFile.type);
-      const key = `menu-items/${imageFile.name}.${extension}`;
-      const uploadedUrl = await uploadToR2(key, buffer, imageFile.type || 'application/octet-stream');
+
+      let contentType: string;
+      let extension: string;
+      try {
+        ({ contentType, extension } = validateImageUpload(imageFile, buffer));
+      } catch (err) {
+        if (err instanceof ImageUploadError) {
+          return NextResponse.json({ message: err.message }, { status: 400 });
+        }
+        throw err;
+      }
+
+      const key = buildImageKey('menu-items', extension);
+      const uploadedUrl = await uploadToR2(key, buffer, contentType);
 
       updateData.imageUrl = uploadedUrl;
       updateData.image = uploadedUrl;
@@ -161,16 +173,3 @@ function parseBoolean(value: string | boolean | undefined, fallback: boolean) {
   return fallback;
 }
 
-function getFileExtension(fileName: string, contentType: string) {
-  const match = fileName.match(/\.([a-zA-Z0-9]+)$/);
-  if (match) {
-    return match[1].toLowerCase();
-  }
-
-  if (contentType === 'image/png') return 'png';
-  if (contentType === 'image/webp') return 'webp';
-  if (contentType === 'image/gif') return 'gif';
-  if (contentType === 'image/avif') return 'avif';
-
-  return 'jpg';
-}

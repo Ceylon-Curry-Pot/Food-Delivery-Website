@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import bcrypt from "bcryptjs";
+import { sanitizeText, sanitizeEmail } from "@/lib/sanitize";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, password, role, approved } = body;
+    const name  = sanitizeText(body.name, 100);
+    const email = sanitizeEmail(body.email);
+    const { password, role, approved } = body;
 
     if (!name || !email || !password) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });

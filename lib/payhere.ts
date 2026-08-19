@@ -76,7 +76,8 @@ export function buildNotifyHash(
 export function verifyPayhereNotification(payload: PayhereNotifyPayload) {
   const { merchantId, merchantSecret } = getPayhereConfig();
 
-  if (payload.merchant_id !== merchantId) return false;
+  // Constant-time compare so a mismatch can't be timed character-by-character.
+  if (!timingSafeEqualStrings(payload.merchant_id, merchantId)) return false;
 
   const expected = buildNotifyHash(
     payload.merchant_id,
@@ -87,7 +88,17 @@ export function verifyPayhereNotification(payload: PayhereNotifyPayload) {
     merchantSecret
   );
 
-  return expected === payload.md5sig.toUpperCase();
+  return timingSafeEqualStrings(expected, (payload.md5sig || '').toUpperCase());
+}
+
+function timingSafeEqualStrings(a: string, b: string) {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  // Different lengths already prove a mismatch (timingSafeEqual requires equal
+  // lengths) — this branch reveals only "lengths differ", never how far the
+  // bytes matched, so it doesn't reopen the timing side-channel.
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
 }
 
 export function splitCustomerName(name: string) {

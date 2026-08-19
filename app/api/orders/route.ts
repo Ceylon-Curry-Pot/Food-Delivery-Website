@@ -10,6 +10,7 @@ import {
   OrderInputError,
   serializeOrder,
 } from '@/lib/orderData';
+import { sanitizeText, sanitizeMultiline, sanitizeEmail, escapeRegExp } from '@/lib/sanitize';
 
 export async function GET(req: Request) {
   try {
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
     const query: Record<string, unknown> = {};
     if (status && status !== 'all') query.status = status;
     if (search) {
-      const regex = new RegExp(search, 'i');
+      const regex = new RegExp(escapeRegExp(search), 'i');
       query.$or = [
         { orderNumber: regex },
         { 'customer.name': regex },
@@ -45,9 +46,18 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { customer, type, deliveryAddress, items, note, paymentMethod } = body;
+    const { type, items, paymentMethod } = body;
 
-    if (!customer?.name || !customer?.phone || !type || !items?.length) {
+    // ── Sanitize free-text fields before they're ever stored/displayed ────
+    const customer = {
+      name:  sanitizeText(body.customer?.name, 100),
+      phone: sanitizeText(body.customer?.phone, 20),
+      email: body.customer?.email ? sanitizeEmail(body.customer.email) : undefined,
+    };
+    const deliveryAddress = body.deliveryAddress ? sanitizeMultiline(body.deliveryAddress, 300) : undefined;
+    const note            = body.note ? sanitizeMultiline(body.note, 500) : undefined;
+
+    if (!customer.name || !customer.phone || !type || !items?.length) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
     if (type !== 'delivery' && type !== 'pickup') {
