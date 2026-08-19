@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 import Image from 'next/image';
@@ -14,7 +14,9 @@ import {
   selectDeliveryFee,
   selectTotal,
 } from '@/components/global/useCartStore';
-import { ShoppingBag, ArrowRight, Loader2 } from 'lucide-react';
+import { useLoyaltyStore } from '@/components/loyalty/useLoyaltyStore';
+import { awardOrderPoints, previewOrderPoints, type PointsPreview } from '@/lib/loyaltyApi';
+import { ShoppingBag, ArrowRight, Loader2, Sparkles } from 'lucide-react';
 
 export default function CheckoutPage() {
   const router      = useRouter();
@@ -30,6 +32,47 @@ export default function CheckoutPage() {
   const subtotal    = useCartStore(selectSubtotal);
   const deliveryFee = useCartStore(selectDeliveryFee);
   const total       = useCartStore(selectTotal);
+
+  const member    = useLoyaltyStore((s) => s.member);
+  const setMember = useLoyaltyStore((s) => s.setMember);
+
+  const [pointsPreview, setPointsPreview] = useState<PointsPreview | null>(null);
+
+  // Points are earned on the food subtotal only — the delivery fee doesn't
+  // count — so preview against `subtotal`, matching what the backend awards.
+  useEffect(() => {
+    if (!member || subtotal <= 0) {
+      setPointsPreview(null);
+      return;
+    }
+
+    let cancelled = false;
+    previewOrderPoints(subtotal).then((preview) => {
+      if (!cancelled) setPointsPreview(preview);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [member, subtotal]);
+
+  /**
+   * Credit the order's points and fold the new balance into the local store so
+   * the navbar and loyalty card update without a refetch. Guests are a no-op,
+   * and any failure is swallowed — the order is already placed, and the points
+   * can still be reconciled server-side.
+   */
+  const awardLoyaltyPoints = async (orderId: string) => {
+    if (!member) return;
+    try {
+      const result = await awardOrderPoints(orderId);
+      if (result.awarded && result.totalPoints != null && result.tier) {
+        setMember({ ...member, points: result.totalPoints, tier: result.tier });
+      }
+    } catch (loyaltyError) {
+      console.error('[loyalty] Could not award points for order', orderId, loyaltyError);
+    }
+  };
 
   const handleContinue = async () => {
     const contactOk = contactRef.current?.validate() ?? false;
@@ -102,6 +145,12 @@ export default function CheckoutPage() {
 
       const order = await res.json();
       if (!res.ok) throw new Error(order?.message || 'Failed to place order');
+
+      // Cash orders earn loyalty points right away. Card/wallet orders are
+      // credited server-side by the PayHere webhook once payment confirms.
+      // A no-op for guests, and never allowed to block the confirmation.
+      await awardLoyaltyPoints(order._id);
+
       clearCart();
       router.push(`/tracker/${order._id}`);
     } catch (err) {
@@ -209,6 +258,16 @@ export default function CheckoutPage() {
                 <span>Total</span>
                 <span className="text-red-600">Rs. {total.toLocaleString()}</span>
               </div>
+
+              {pointsPreview && pointsPreview.points > 0 && (
+                <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3.5 py-2.5 mb-4 text-sm">
+                  <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span className="text-amber-800">
+                    You&apos;ll earn <span className="font-bold">{pointsPreview.points} pts</span> on this order
+                    {pointsPreview.birthdayBonus && ' — 3× birthday bonus 🎂'}
+                  </span>
+                </div>
+              )}
 
               <button
                 onClick={handleContinue}

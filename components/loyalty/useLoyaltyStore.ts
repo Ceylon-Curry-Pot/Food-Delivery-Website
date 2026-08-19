@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { loyaltySignOut } from '@/lib/loyaltyApi';
+import type { LoyaltyTierValue } from '@/lib/loyaltyPoints';
 
-export type LoyaltyTier = 'Clove' | 'Cinnamon' | 'Saffron' | 'Cardamom';
+export type LoyaltyTier = LoyaltyTierValue;
 
 export type LoyaltyMember = {
   id: string;
@@ -53,8 +54,11 @@ export const useLoyaltyStore = create<LoyaltyStore>()(
 );
 
 // ── Tier configuration ─────────────────────────────────────────────────────
-// Earning rate: 1 point per Rs. 50 spent
-// Weekend: 2× multiplier | Birthday month: 3× multiplier
+// Presentation only — icons, colours and perk copy. The earning rate and tier
+// thresholds themselves live in `@/lib/loyaltyPoints` so the server awards on
+// exactly the same rules this UI advertises.
+//
+// Earning rate: 1 point per Rs. 50 spent | Birthday month: 3× multiplier
 //
 // Tier thresholds are intentionally demanding:
 //   Clove     →  0 – 249   pts  (~8  weekday orders to exit)
@@ -183,12 +187,16 @@ export const TIER_CONFIG = {
 } as const;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-export function getTierForPoints(points: number): LoyaltyTier {
-  if (points >= 3500) return 'Cardamom';
-  if (points >= 1000) return 'Saffron';
-  if (points >= 250)  return 'Cinnamon';
-  return 'Clove';
-}
+// Re-exported from the shared engine so the UI and the award routine can never
+// disagree about which tier a balance belongs to.
+export {
+  getTierForPoints,
+  calculatePointsEarned,
+  isBirthdayMonth,
+  RUPEES_PER_POINT,
+  BIRTHDAY_MONTH_MULTIPLIER,
+  TIER_ORDER,
+} from '@/lib/loyaltyPoints';
 
 export function getProgressPercent(points: number, tier: LoyaltyTier): number {
   if (tier === 'Cardamom') return 100;
@@ -209,5 +217,3 @@ export function getNextTier(tier: LoyaltyTier): LoyaltyTier | null {
   if (tier === 'Saffron')  return 'Cardamom';
   return null;
 }
-
-export const TIER_ORDER: LoyaltyTier[] = ['Clove', 'Cinnamon', 'Saffron', 'Cardamom'];

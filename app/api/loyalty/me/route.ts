@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectToDatabase from '@/lib/mongodb';
 import LoyaltyMember from '@/lib/models/LoyaltyMember';
+import { reconcileMemberTier } from '@/lib/awardLoyaltyPoints';
 
 export async function GET() {
   try {
@@ -22,6 +23,11 @@ export async function GET() {
       return NextResponse.json({ member: null });
     }
 
+    // Self-heal: points and tier are stored independently, so a manual points
+    // edit or a past bug can leave them disagreeing. Correct it here rather
+    // than surfacing a stale tier to the user.
+    const tier = await reconcileMemberTier(member._id.toString());
+
     return NextResponse.json({
       member: {
         id:           member._id.toString(),
@@ -30,7 +36,7 @@ export async function GET() {
         phone:        member.phone,
         birthday:     member.birthday,
         points:       member.points,
-        tier:         member.tier,
+        tier,
         memberSince:  member.memberSince.toISOString(),
         memberNumber: member.memberNumber,
       },

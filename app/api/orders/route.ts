@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { sendOrderConfirmation } from '@/lib/sendOrderConfirmation';
 import connectToDatabase from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
@@ -52,6 +54,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Invalid order type' }, { status: 400 });
     }
 
+    // Attach the loyalty member from the session, never from the request body —
+    // this is what later entitles the order to earn points.
+    const session = await getServerSession(authOptions);
+    const loyaltyMember =
+      session?.user?.accountType === 'loyalty' ? session.user.id : undefined;
+
     await connectToDatabase();
     const orderItems = await buildOrderItems(items, true);
     const orderTotal = calculateOrderTotal(orderItems, type);
@@ -70,6 +78,7 @@ export async function POST(req: Request) {
       paymentMethod,
       paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'pending',
       status: 'pending',
+      loyaltyMember,
     });
 
     const populated = await Order.findById(order._id).populate('items.menuItem').lean();

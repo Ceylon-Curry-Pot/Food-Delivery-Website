@@ -13,13 +13,12 @@ import LoyaltyMemberCard from '@/components/loyalty/LoyaltyMemberCard';
 // ── Data ──────────────────────────────────────────────────────────────────
 const HOW_IT_WORKS = [
   { step: '01', icon: Crown, title: 'Create Your Account', desc: 'Sign up in under a minute. We need your name, email, phone and birthday for your rewards.' },
-  { step: '02', icon: Zap,   title: 'Order & Earn Points', desc: 'Earn 1 point for every Rs. 10 you spend. Double points on weekends, triple on your birthday month.' },
+  { step: '02', icon: Zap,   title: 'Order & Earn Points', desc: 'Earn 1 point for every Rs. 50 you spend, and triple points all through your birthday month.' },
   { step: '03', icon: Gift,  title: 'Unlock Rewards',      desc: 'Reach higher tiers to unlock bigger discounts, free delivery and exclusive Sunday specials.' },
 ];
 
 const EARN_GUIDE = [
   { emoji: '🛒', label: 'Standard purchase',  value: '1 pt / Rs. 50', highlight: false },
-  { emoji: '📅', label: 'Weekend orders',      value: '2× points',      highlight: true  },
   { emoji: '🎂', label: 'Birthday month',      value: '3× points',      highlight: true  },
 ];
 
@@ -445,19 +444,19 @@ export default function LoyaltyPage() {
               </div>
               <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
               <div className="bg-white rounded-xl border border-gray-200 px-4 py-2.5 text-center">
-                <p className="text-gray-400 text-xs">Weekday</p>
+                <p className="text-gray-400 text-xs">Any day</p>
                 <p className="font-bold text-red-600">50 pts</p>
               </div>
               <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
               <div className="bg-white rounded-xl border border-gray-200 px-4 py-2.5 text-center">
-                <p className="text-gray-400 text-xs">On weekend</p>
-                <p className="font-bold text-red-600">100 pts 🔥</p>
+                <p className="text-gray-400 text-xs">Birthday month</p>
+                <p className="font-bold text-red-600">150 pts 🔥</p>
               </div>
             </div>
             <div className="mt-5 grid sm:grid-cols-3 gap-3 text-center text-xs">
               <div className="bg-white rounded-xl border border-gray-100 p-3">
                 <p className="font-bold text-gray-700">Clove → Cinnamon</p>
-                <p className="text-gray-400 mt-0.5">~8 weekday orders</p>
+                <p className="text-gray-400 mt-0.5">~8 orders</p>
               </div>
               <div className="bg-white rounded-xl border border-gray-100 p-3">
                 <p className="font-bold text-gray-700">Cinnamon → Saffron</p>
@@ -469,7 +468,7 @@ export default function LoyaltyPage() {
               </div>
             </div>
             <p className="text-center text-xs text-gray-400 mt-4">
-              Weekend orders earn 2× — the fastest way to climb tiers.
+              Birthday-month orders earn 3× — the fastest way to climb tiers.
               Cardamom is reserved for our most dedicated members.
             </p>
           </div>
