@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectToDatabase from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
 import {
@@ -31,6 +33,12 @@ export async function POST(req: Request) {
     const { merchantId, merchantSecret, sandbox } = getPayhereConfig();
     const baseUrl = getPublicBaseUrl(req);
 
+    // Stamped from the session so the PayHere webhook — which has no session of
+    // its own — knows who to credit once payment is confirmed.
+    const session = await getServerSession(authOptions);
+    const loyaltyMember =
+      session?.user?.accountType === 'loyalty' ? session.user.id : undefined;
+
     await connectToDatabase();
 
     const orderItems = await buildOrderItems(items, true);
@@ -52,6 +60,7 @@ export async function POST(req: Request) {
       paymentStatus: 'pending',
       payhereStatusCode: '0',
       status: 'pending',
+      loyaltyMember,
     });
 
     const itemSummary = orderItems

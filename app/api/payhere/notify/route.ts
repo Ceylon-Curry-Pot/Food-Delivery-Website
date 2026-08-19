@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Order from '@/lib/models/Order';
+import { awardLoyaltyPointsForOrder, revertLoyaltyPointsForOrder } from '@/lib/awardLoyaltyPoints';
 import {
   formatPayhereAmount,
   mapPayhereStatus,
@@ -67,14 +68,41 @@ export async function POST(req: Request) {
       paymentMethod: notification.method || 'payhere',
     };
 
+    // A chargeback arrives after the order was already marked 'paid' — PayHere
+    // has no dedicated order status for it, so it's folded into 'cancelled'
+    // like any other voided payment.
+    const revokesPayment =
+      paymentStatus === 'cancelled' || paymentStatus === 'failed' || paymentStatus === 'charged_back';
+
     if (paymentStatus === 'paid') {
       updateData.status = 'confirmed';
       updateData.paidAt = order.paidAt || new Date();
-    } else if (paymentStatus === 'cancelled' || paymentStatus === 'failed') {
+    } else if (revokesPayment) {
       updateData.status = 'cancelled';
     }
 
     await Order.updateOne({ _id: order._id }, { $set: updateData });
+
+    // Card/wallet orders earn their points here, once PayHere confirms payment.
+    // Idempotent, so PayHere's notification retries can't double-credit.
+    // Never let a loyalty failure turn into a non-200 — PayHere would retry the
+    // whole notification, and the payment itself is already recorded.
+    if (paymentStatus === 'paid') {
+      try {
+        await awardLoyaltyPointsForOrder(order._id.toString());
+      } catch (loyaltyError) {
+        console.error('[loyalty] Award failed for order', order.orderNumber, loyaltyError);
+      }
+    } else if (revokesPayment) {
+      // Cancelled/failed card orders never earned points in the first place —
+      // this only actually claws something back for chargebacks, where the
+      // payment (and the award) had already gone through. Safe no-op otherwise.
+      try {
+        await revertLoyaltyPointsForOrder(order._id.toString());
+      } catch (loyaltyError) {
+        console.error('[loyalty] Revert failed for order', order.orderNumber, loyaltyError);
+      }
+    }
 
     return NextResponse.json({ received: true });
   } catch (error) {

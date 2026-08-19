@@ -8,6 +8,7 @@ import {
   OrderInputError,
   serializeOrder,
 } from '@/lib/orderData';
+import { revertLoyaltyPointsForOrder } from '@/lib/awardLoyaltyPoints';
 
 export async function GET(
   _req: Request,
@@ -92,6 +93,19 @@ export async function PATCH(
     if (!updated) {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }
+
+    // Reverting is scoped to an actual transition into 'cancelled' — a PATCH
+    // that merely re-saves an already-cancelled order shouldn't re-trigger it.
+    // Never let a loyalty failure turn an otherwise-successful cancellation
+    // into an error response.
+    if (updateData.status === 'cancelled' && existing.status !== 'cancelled') {
+      try {
+        await revertLoyaltyPointsForOrder(id);
+      } catch (loyaltyError) {
+        console.error('[loyalty] Failed to revert points for cancelled order', id, loyaltyError);
+      }
+    }
+
     return NextResponse.json(serializeOrder(updated));
   } catch (error) {
     if (error instanceof OrderInputError) {

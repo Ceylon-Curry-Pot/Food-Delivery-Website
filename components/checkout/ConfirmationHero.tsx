@@ -1,9 +1,13 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 
 export default function ConfirmationHero() {
-  const orderId = '#CCP-' + Math.floor(10000 + Math.random() * 90000);
+  // Generate a stable order ID once during initial render
+  const [orderId] = useState<string>(() => {
+    return '#CCP-' + Math.floor(10000 + Math.random() * 90000);
+  });
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center shadow-sm">
@@ -18,7 +22,7 @@ export default function ConfirmationHero() {
 
       <div className="inline-flex flex-col items-center bg-gray-50 border border-gray-100 rounded-2xl px-8 py-4">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Your Order ID</p>
-        <p className="text-2xl font-bold text-red-600">{orderId}</p>
+        <p className="text-2xl font-bold text-red-600">{orderId || 'Generating...'}</p>
       </div>
 
       <p className="text-xs text-gray-400 mt-4">
