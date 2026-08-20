@@ -78,8 +78,9 @@ export default function LoyaltyNavButton() {
               <p className="text-xs text-gray-400">{member.memberNumber}</p>
             </div>
 
+            {/* Fixed: was openModal('signup') which opened the join form instead of the member dashboard */}
             <button
-              onClick={() => { openModal('signup'); setDropOpen(false); }}
+              onClick={() => { openModal('signin'); setDropOpen(false); }}
               className="w-full text-left px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors"
             >
               View Loyalty Dashboard
