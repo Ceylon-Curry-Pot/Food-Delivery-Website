@@ -6,23 +6,23 @@
 // Earning rate:    1 point per Rs. 50 spent
 // Birthday month:  3× multiplier
 //
-// Tier thresholds are intentionally demanding:
-//   Clove     →  0 – 249      pts  (~8  orders to exit)
-//   Cinnamon  →  250 – 999    pts  (~25 more orders to exit)
-//   Saffron   →  1,000 – 3,499 pts (~50 more orders to exit)
-//   Cardamom  →  3,500+            (elite — roughly 1+ year of loyal ordering)
+// Tier thresholds (at Rs. 50/pt, avg Rs. 2,500/order = 50 pts/order):
+//   Clove     →  0   – 499    pts  (~10 orders to exit)
+//   Cinnamon  →  500 – 1,499  pts  (~20 more orders to exit)
+//   Saffron   →  1,500 – 3,499 pts (~40 more orders to exit)
+//   Cardamom  →  3,500+            (elite — 70+ orders total)
 
 export type LoyaltyTierValue = 'Clove' | 'Cinnamon' | 'Saffron' | 'Cardamom';
 
-export const RUPEES_PER_POINT = 50;
+export const RUPEES_PER_POINT        = 50;
 export const BIRTHDAY_MONTH_MULTIPLIER = 3;
 
-/** Highest threshold first — `getTierForPoints` returns the first match. */
+/** Highest threshold first — getTierForPoints returns the first match. */
 export const TIER_THRESHOLDS = [
-  { tier: 'Cardamom', min: 3500 },
-  { tier: 'Saffron',  min: 1000 },
-  { tier: 'Cinnamon', min: 250  },
-  { tier: 'Clove',    min: 0    },
+  { tier: 'Cardamom' as const, min: 3500 },
+  { tier: 'Saffron'  as const, min: 1500 },
+  { tier: 'Cinnamon' as const, min: 500  },
+  { tier: 'Clove'    as const, min: 0    },
 ] as const satisfies ReadonlyArray<{ tier: LoyaltyTierValue; min: number }>;
 
 export const TIER_ORDER: LoyaltyTierValue[] = ['Clove', 'Cinnamon', 'Saffron', 'Cardamom'];
@@ -51,7 +51,10 @@ function monthInColombo(when: Date): number {
  * Read the month off the string rather than via `new Date()` so a UTC-negative
  * server can't shift an early-of-month birthday into the previous month.
  */
-export function isBirthdayMonth(birthday: string | undefined | null, when: Date = new Date()): boolean {
+export function isBirthdayMonth(
+  birthday: string | undefined | null,
+  when: Date = new Date()
+): boolean {
   if (typeof birthday !== 'string') return false;
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthday.trim());
   if (!match) return false;
@@ -87,11 +90,11 @@ export function calculatePointsEarned({
   birthday?: string | null;
   when?: Date;
 }): PointsCalculation {
-  const spend = Number.isFinite(amount) && amount > 0 ? amount : 0;
+  const spend      = Number.isFinite(amount) && amount > 0 ? amount : 0;
   const basePoints = Math.floor(spend / RUPEES_PER_POINT);
 
   const birthdayBonus = isBirthdayMonth(birthday, when);
-  const multiplier = birthdayBonus ? BIRTHDAY_MONTH_MULTIPLIER : 1;
+  const multiplier    = birthdayBonus ? BIRTHDAY_MONTH_MULTIPLIER : 1;
 
   return {
     basePoints,
