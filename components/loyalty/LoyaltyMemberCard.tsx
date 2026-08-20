@@ -30,13 +30,13 @@ export default function LoyaltyMemberCard({ member, showProgress = false }: Prop
         {/* Decorative blobs */}
         <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-white/10" />
         <div className="absolute -left-8  -bottom-8  w-36 h-36 rounded-full bg-white/10" />
-        <div className="absolute right-24 bottom-4 w-20 h-20 rounded-full bg-white/8" />
+        <div className="absolute right-24 bottom-4  w-20 h-20 rounded-full bg-white/8"  />
 
         {/* Shine */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-transparent" />
 
         <div className="relative z-10">
-          {/* Header row */}
+          {/* Header */}
           <div className="flex items-start justify-between mb-5">
             <div>
               <p className="text-white/60 text-[10px] font-bold tracking-[0.25em] uppercase">
@@ -103,8 +103,9 @@ export default function LoyaltyMemberCard({ member, showProgress = false }: Prop
               }}
             />
           </div>
+          {/* Fixed: was "Rs. 10" which was the old earning rate */}
           <p className="text-xs text-gray-400 text-center">
-            Earn 1 point for every Rs. 10 spent
+            Earn 1 point for every Rs. 50 spent
           </p>
         </div>
       )}
