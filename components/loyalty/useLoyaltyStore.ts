@@ -71,8 +71,8 @@ export const TIER_CONFIG = {
     icon:          '🌿',
     label:         'Clove',
     pointsMin:     0,
-    pointsMax:     249,
-    nextAt:        250,
+    pointsMax:     499,
+    nextAt:        500,
     discountLabel: 'Welcome Tier',
     cardFrom:      '#1C3829',
     cardVia:       '#2D5A3D',
@@ -98,9 +98,9 @@ export const TIER_CONFIG = {
   Cinnamon: {
     icon:          '🫚',
     label:         'Cinnamon',
-    pointsMin:     250,
-    pointsMax:     999,
-    nextAt:        1000,
+    pointsMin:     500,
+    pointsMax:     1499,
+    nextAt:        1500,
     discountLabel: '5% off Rs. 5,000+ orders',
     cardFrom:      '#92400E',
     cardVia:       '#B45309',
@@ -126,7 +126,7 @@ export const TIER_CONFIG = {
   Saffron: {
     icon:          '🌾',
     label:         'Saffron',
-    pointsMin:     1000,
+    pointsMin:     1500,
     pointsMax:     3499,
     nextAt:        3500,
     discountLabel: '10% off Rs. 5,000+ orders',
@@ -217,3 +217,5 @@ export function getNextTier(tier: LoyaltyTier): LoyaltyTier | null {
   if (tier === 'Saffron')  return 'Cardamom';
   return null;
 }
+
+
