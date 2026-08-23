@@ -9,6 +9,8 @@ import {
   serializeOrder,
 } from '@/lib/orderData';
 import { revertLoyaltyPointsForOrder } from '@/lib/awardLoyaltyPoints';
+import { requireAdmin } from '@/lib/authGuard';
+import { logSecurityEvent } from '@/lib/securityLog';
 
 export async function GET(
   _req: Request,
@@ -38,6 +40,9 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, response } = await requireAdmin(req);
+  if (response) return response;
+
   try {
     const { id } = await params;
     const body = await req.json();
@@ -106,6 +111,7 @@ export async function PATCH(
       }
     }
 
+    logSecurityEvent('admin_action', { action: 'order_update', actor: user!.email, orderId: id, fields: Object.keys(updateData) });
     return NextResponse.json(serializeOrder(updated));
   } catch (error) {
     if (error instanceof OrderInputError) {

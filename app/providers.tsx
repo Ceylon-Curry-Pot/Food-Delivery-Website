@@ -4,10 +4,15 @@ import React from "react"
 import { ThemeProvider } from "./theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { SessionProvider } from "next-auth/react"
+import LoyaltySessionSync from "@/components/loyalty/LoyaltySessionSync"
 
 function Providers({children}: {children: React.ReactNode}){
     return (
-        <SessionProvider>
+        // refetchInterval keeps the session state (and therefore the loyalty
+        // sync below) from going stale in a tab left open past the 8h expiry
+        // without ever regaining window focus.
+        <SessionProvider refetchInterval={5 * 60}>
+            <LoyaltySessionSync />
             <Toaster />
             <ThemeProvider
                 attribute={'class'}

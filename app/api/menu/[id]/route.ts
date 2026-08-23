@@ -4,6 +4,8 @@ import MenuItem from '@/lib/models/MenuItem';
 import { revalidatePath } from 'next/cache';
 import { getR2PublicBaseUrl, uploadToR2 } from '@/lib/r2';
 import { validateImageUpload, buildImageKey, ImageUploadError } from '@/lib/imageUpload';
+import { requireAdmin } from '@/lib/authGuard';
+import { logSecurityEvent } from '@/lib/securityLog';
 
 export const runtime = 'nodejs';
 
@@ -21,6 +23,9 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, response } = await requireAdmin(req);
+  if (response) return response;
+
   try {
     const { id } = await params;
     const { payload, imageFile } = await readMenuItemRequest(req);
@@ -103,7 +108,8 @@ export async function PATCH(
     // Revalidate customer and admin pages
     revalidatePath('/menu');
     revalidatePath('/admin/menu');
-    
+
+    logSecurityEvent('admin_action', { action: 'menu_item_update', actor: user!.email, itemId: id });
     return NextResponse.json(updated);
   } catch (error) {
     console.error('[PATCH /api/menu/:id]', error);
@@ -116,6 +122,9 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, response } = await requireAdmin(req);
+  if (response) return response;
+
   try {
     const { id } = await params;
     await connectToDatabase();
@@ -130,6 +139,7 @@ export async function DELETE(
     revalidatePath('/menu');
     revalidatePath('/admin/menu');
 
+    logSecurityEvent('admin_action', { action: 'menu_item_delete', actor: user!.email, itemId: id });
     return NextResponse.json({ message: 'Item deleted successfully' });
   } catch (error) {
     console.error('[DELETE /api/menu/:id]', error);

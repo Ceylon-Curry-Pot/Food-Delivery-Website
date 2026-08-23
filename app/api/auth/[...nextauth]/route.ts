@@ -5,6 +5,8 @@ import connectToDatabase from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import LoyaltyMember from "@/lib/models/LoyaltyMember";
 import bcrypt from "bcryptjs";
+import { isLocked, lockRemainingMs, registerFailedLogin, clearFailedLogins } from "@/lib/accountLockout";
+import { logSecurityEvent } from "@/lib/securityLog";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -29,11 +31,21 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid email or password");
         }
 
+        if (isLocked(user)) {
+          logSecurityEvent('login_failed', { context: 'admin', email: user.email, reason: 'locked' });
+          const minutes = Math.ceil(lockRemainingMs(user) / 60000);
+          throw new Error(`Too many failed attempts. Try again in ${minutes} minute(s).`);
+        }
+
         const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
 
         if (!isPasswordCorrect) {
+          await registerFailedLogin(user, 'admin');
+          logSecurityEvent('login_failed', { context: 'admin', email: user.email, reason: 'bad-password' });
           throw new Error("Invalid email or password");
         }
+
+        await clearFailedLogins(user);
 
         // Check if staff has been approved by admin
         if (user.role === 'staff' && !user.approved) {
@@ -74,14 +86,25 @@ export const authOptions: AuthOptions = {
           throw new Error("Invalid email or password");
         }
 
+        if (isLocked(member)) {
+          logSecurityEvent('login_failed', { context: 'loyalty', email: member.email, reason: 'locked' });
+          // Same generic message as everything else here — confirming a lockout
+          // would itself leak that the account exists.
+          throw new Error("Invalid email or password");
+        }
+
         const isPasswordCorrect = await bcrypt.compare(
           credentials.password,
           member.passwordHash
         );
 
         if (!isPasswordCorrect) {
+          await registerFailedLogin(member, 'loyalty');
+          logSecurityEvent('login_failed', { context: 'loyalty', email: member.email, reason: 'bad-password' });
           throw new Error("Invalid email or password");
         }
+
+        await clearFailedLogins(member);
 
         return {
           id:           member._id.toString(),

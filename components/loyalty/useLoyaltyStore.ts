@@ -24,6 +24,10 @@ type LoyaltyStore = {
   openModal: (tab?: 'signin' | 'signup') => void;
   closeModal: () => void;
   setMember: (member: LoyaltyMember) => void;
+  /** Drops the cached member without touching the server session — for
+   *  reconciling against a session that's already gone (expired/cleared/
+   *  switched), as opposed to `logout()` which actively ends one. */
+  clearMember: () => void;
   logout: () => void;
 };
 
@@ -33,10 +37,11 @@ export const useLoyaltyStore = create<LoyaltyStore>()(
       member:      null,
       isModalOpen: false,
       modalTab:    'signin',
-      openModal:  (tab = 'signin') => set({ isModalOpen: true, modalTab: tab }),
-      closeModal: ()               => set({ isModalOpen: false }),
-      setMember:  (member)         => set({ member, isModalOpen: false }),
-      logout:     ()               => {
+      openModal:   (tab = 'signin') => set({ isModalOpen: true, modalTab: tab }),
+      closeModal:  ()               => set({ isModalOpen: false }),
+      setMember:   (member)         => set({ member, isModalOpen: false }),
+      clearMember: ()               => set({ member: null }),
+      logout:      ()               => {
         // Clear server session (fire-and-forget; UI updates immediately)
         loyaltySignOut().catch(() => {});
         set({ member: null });

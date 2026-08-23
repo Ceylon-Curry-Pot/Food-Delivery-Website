@@ -3,6 +3,8 @@ import connectToDatabase from '@/lib/mongodb';
 import MenuItem from '@/lib/models/MenuItem';
 import { getR2PublicBaseUrl, uploadToR2 } from '@/lib/r2';
 import { validateImageUpload, buildImageKey, ImageUploadError } from '@/lib/imageUpload';
+import { requireAdmin } from '@/lib/authGuard';
+import { logSecurityEvent } from '@/lib/securityLog';
 
 export const runtime = 'nodejs';
 
@@ -29,6 +31,9 @@ export async function GET() {
 
 // POST /api/menu — create new menu item
 export async function POST(req: Request) {
+  const { user, response } = await requireAdmin(req);
+  if (response) return response;
+
   try {
     const { payload, imageFile } = await readMenuItemRequest(req);
     const { name, price, category, description, available } = payload;
@@ -69,6 +74,7 @@ export async function POST(req: Request) {
 
     // Fetch as lean to get a plain serializable object (same shape as GET)
     const lean = await MenuItem.findById(item._id).lean();
+    logSecurityEvent('admin_action', { action: 'menu_item_create', actor: user!.email, itemId: item._id.toString() });
     return NextResponse.json(serializeItem(lean!), { status: 201 });
   } catch (error: unknown) {
     console.error('[POST /api/menu]', error);

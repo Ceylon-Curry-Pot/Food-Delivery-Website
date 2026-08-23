@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/lib/models/User";
+import { requireAdminRole } from "@/lib/authGuard";
+import { logSecurityEvent } from "@/lib/securityLog";
 
+// Approving or deleting an account is a sensitive privilege — restricted to
+// the 'admin' role, not just any approved staff member (self- or
+// peer-approval by staff would otherwise be possible).
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, response } = await requireAdminRole(req);
+  if (response) return response;
+
   try {
     const { id } = await params;
     const body = await req.json();
@@ -33,6 +41,7 @@ export async function PATCH(
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
+    logSecurityEvent('admin_action', { action: 'user_approve', actor: user!.email, targetId: id });
     return NextResponse.json(updatedUser);
   } catch (error) {
     console.error(error);
@@ -41,9 +50,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, response } = await requireAdminRole(req);
+  if (response) return response;
+
   try {
     const { id } = await params;
     await connectToDatabase();
@@ -53,6 +65,7 @@ export async function DELETE(
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
+    logSecurityEvent('admin_action', { action: 'user_delete', actor: user!.email, targetId: id });
     return NextResponse.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error(error);

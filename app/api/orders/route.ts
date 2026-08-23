@@ -11,8 +11,15 @@ import {
   serializeOrder,
 } from '@/lib/orderData';
 import { sanitizeText, sanitizeMultiline, sanitizeEmail, escapeRegExp } from '@/lib/sanitize';
+import { requireAdmin } from '@/lib/authGuard';
 
+// Full order list carries customer PII (name, phone, delivery address) —
+// admin-only. Placing an order (POST, below) stays public: that's the
+// customer-facing checkout flow.
 export async function GET(req: Request) {
+  const { response } = await requireAdmin(req);
+  if (response) return response;
+
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status');
