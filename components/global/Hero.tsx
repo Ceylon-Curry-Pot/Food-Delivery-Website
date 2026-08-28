@@ -86,7 +86,7 @@ export default function Hero() {
           className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-red-600/10 text-red-500 border border-red-500/20 mb-6 backdrop-blur-md"
         >
           <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-          <span>Open Now • Est. 2015</span>
+          <span>Open Now • Est. 2023</span>
         </motion.div>
 
         {/* Headline */}

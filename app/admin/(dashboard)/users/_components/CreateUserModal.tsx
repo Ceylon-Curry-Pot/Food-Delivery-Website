@@ -35,8 +35,8 @@ export default function CreateUserModal({ isOpen, onClose }: { isOpen: boolean, 
       router.refresh();
       onClose();
       setFormData({ name: "", email: "", password: "", role: "staff" });
-    } catch (err: any) {
-      alert(err.message || "Failed to create user");
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to create user");
     } finally {
       setLoading(false);
     }
