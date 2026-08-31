@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectToDatabase from '@/lib/mongodb';
-import Order from '@/lib/models/Order';
+import Order, { generateOrderNumber } from '@/lib/models/Order';
 import {
   buildOrderItems,
   calculateOrderTotal,
@@ -44,8 +44,7 @@ export async function POST(req: Request) {
     const orderItems = await buildOrderItems(items, true);
     const total = calculateOrderTotal(orderItems, type);
     const amount = formatPayhereAmount(total);
-    const timestamp = Date.now().toString().slice(-6);
-    const orderNumber = `CEY${timestamp}`;
+    const orderNumber = await generateOrderNumber();
     const { firstName, lastName } = splitCustomerName(customer.name);
 
     const order = await Order.create({

@@ -45,6 +45,7 @@ export const authOptions: AuthOptions = {
           name: user.name,
           email: user.email,
           role: user.role,
+          approved: user.approved,
           accountType: 'admin' as const,
         };
       }
@@ -107,6 +108,7 @@ export const authOptions: AuthOptions = {
         // Admin-specific fields
         if (user.accountType === 'admin') {
           token.role = user.role;
+          token.approved = user.approved;
         }
 
         // Loyalty-specific fields
@@ -129,6 +131,7 @@ export const authOptions: AuthOptions = {
         // Admin-specific fields
         if (token.accountType === 'admin') {
           session.user.role = token.role;
+          session.user.approved = token.approved;
         }
 
         // Loyalty-specific fields

@@ -18,19 +18,13 @@ async function getPendingUsersCount() {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
-
-  if (!session) {
+  
+  if (
+    !session ||
+    session.user.accountType !== 'admin' ||
+    (session.user.role === 'staff' && !session.user.approved)
+  ) {
     redirect('/admin/login');
-  }
-
-  const sessionUser = session.user as { email?: string | null; role?: string; approved?: boolean } | undefined;
-
-  if (sessionUser?.role === 'staff' && !sessionUser.approved && sessionUser.email) {
-      await connectToDatabase();
-      const user = await User.findOne({ email: sessionUser.email });
-      if (!user || (user.role === 'staff' && !user.approved)) {
-        redirect('/admin/login');
-      }
   }
 
   const pendingUsersCount = await getPendingUsersCount();

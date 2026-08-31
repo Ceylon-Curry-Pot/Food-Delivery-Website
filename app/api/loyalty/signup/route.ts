@@ -23,6 +23,16 @@ export async function POST(request: Request) {
       );
     }
 
+    if (
+      password.toLowerCase() === String(name).toLowerCase() ||
+      password === String(email).split('@')[0]
+    ) {
+      return NextResponse.json(
+        { message: 'Password is too easy to guess. Please choose a stronger password.' },
+        { status: 400 }
+      );
+    }
+
     await connectToDatabase();
 
     // ── Check for existing email ─────────────────────────────────────────

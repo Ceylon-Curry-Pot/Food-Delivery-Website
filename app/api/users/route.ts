@@ -9,7 +9,27 @@ export async function POST(req: Request) {
     const { name, email, password, role, approved } = body;
 
     if (!name || !email || !password) {
-      return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    if (typeof password !== 'string' || password.length < 8) {
+      return NextResponse.json(
+        { message: 'Password must be at least 8 characters' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      password.toLowerCase() === String(name).toLowerCase() ||
+      password === String(email).split('@')[0]
+    ) {
+      return NextResponse.json(
+        { message: 'Password is too easy to guess. Please choose a stronger password.' },
+        { status: 400 }
+      );
     }
 
     await connectToDatabase();
@@ -45,7 +65,7 @@ export async function GET(req: Request) {
 
     await connectToDatabase();
 
-    const query: any = {};
+    const query: { approved?: boolean } = {};
     if (approved !== null) {
       query.approved = approved === "true";
     }

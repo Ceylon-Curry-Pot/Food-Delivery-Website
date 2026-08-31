@@ -1,55 +1,30 @@
-// components/menu/MenuSection.tsx
 'use client';
 
 import { useMemo, useState } from 'react';
 import SectionHeader from '@/components/home/SectionHeader';
 import MenuFilters from './MenuFilters';
 import MenuGrid from './MenuGrid';
-import { type MenuDish, type MenuCategory } from '@/lib/menu';
-import { useCartStore } from '@/components/global/useCartStore';
+import { menuCategories, type MenuDish, type MenuCategory } from '@/lib/menu';
 
 type Props = {
   dishes: MenuDish[];
-  categories: MenuCategory[];
 };
 
-export default function MenuSection({ dishes, categories }: Props) {
-  const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] =
-    useState<MenuCategory>('All');
-
-  const addItem = useCartStore((state) => state.addItem);
-
-  const resolvedActiveCategory =
-    activeCategory === 'All' || categories.includes(activeCategory)
-      ? activeCategory
-      : 'All';
+export default function MenuSection({ dishes }: Props) {
+  const [search,         setSearch]         = useState('');
+  const [activeCategory, setActiveCategory] = useState<MenuCategory>('All');
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-
     return dishes.filter((d) => {
-      const matchesCategory =
-        resolvedActiveCategory === 'All' ? true : d.category === resolvedActiveCategory;
-
-      const matchesSearch =
-        q.length === 0
-          ? true
-          : d.name.toLowerCase().includes(q) ||
-            d.description.some((x) => x.toLowerCase().includes(q));
-
+      const matchesCategory = activeCategory === 'All' || d.category === activeCategory;
+      const matchesSearch   =
+        q.length === 0 ||
+        d.name.toLowerCase().includes(q) ||
+        d.description.some((x) => x.toLowerCase().includes(q));
       return matchesCategory && matchesSearch;
     });
-  }, [dishes, search, resolvedActiveCategory]);
-
-  const handleAdd = (dish: MenuDish) => {
-    addItem({
-      id: dish.id,
-      name: dish.name,
-      price: dish.price,
-      image: dish.image,
-    });
-  };
+  }, [dishes, search, activeCategory]);
 
   return (
     <div>
@@ -62,15 +37,15 @@ export default function MenuSection({ dishes, categories }: Props) {
       <MenuFilters
         search={search}
         onSearchChange={setSearch}
-        categories={['All', ...categories].filter(
-          (category) =>
-            category === 'All' || dishes.some((dish) => dish.category === category)
+        categories={menuCategories.filter(
+          (cat) => cat === 'All' || dishes.some((d) => d.category === cat)
         )}
-        activeCategory={resolvedActiveCategory}
+        activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
       />
 
-      <MenuGrid dishes={filtered} onAdd={handleAdd} />
+      {/* No onAdd — MenuDishCard reads the cart store and manages itself */}
+      <MenuGrid dishes={filtered} />
     </div>
   );
 }

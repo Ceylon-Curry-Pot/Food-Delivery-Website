@@ -59,10 +59,10 @@ export interface IOrder extends Document {
 const OrderItemSchema = new Schema<IOrderItem>(
   {
     menuItem: { type: Schema.Types.ObjectId, ref: 'MenuItem' },
-    name:     { type: String, required: true },
-    qty:      { type: Number, required: true, min: 1 },
-    price:    { type: Number, required: true, min: 0 },
-    image:    { type: String },
+    name: { type: String, required: true },
+    qty: { type: Number, required: true, min: 1 },
+    price: { type: Number, required: true, min: 0 },
+    image: { type: String },
   },
   { _id: false }
 );
@@ -71,42 +71,60 @@ const OrderSchema = new Schema<IOrder>(
   {
     orderNumber: { type: String, required: true, unique: true },
     customer: {
-      name:  { type: String, required: true },
+      name: { type: String, required: true },
       phone: { type: String, required: true },
       email: { type: String },
     },
-    type:            { type: String, enum: ['delivery', 'pickup'], required: true },
+    type: { type: String, enum: ['delivery', 'pickup'], required: true },
     deliveryAddress: { type: String },
-    items:           { type: [OrderItemSchema], required: true },
-    total:           { type: Number, required: true, min: 0 },
+    items: { type: [OrderItemSchema], required: true },
+    total: { type: Number, required: true, min: 0 },
     status: {
-      type:    String,
-      enum:    ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'],
+      type: String,
+      enum: ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'],
       default: 'pending',
     },
-    note:          { type: String },
+    note: { type: String },
     paymentMethod: { type: String },
     paymentStatus: {
-      type:    String,
-      enum:    ['unpaid', 'pending', 'paid', 'failed', 'cancelled', 'charged_back'],
+      type: String,
+      enum: ['unpaid', 'pending', 'paid', 'failed', 'cancelled', 'charged_back'],
       default: 'unpaid',
     },
-    payherePaymentId:  { type: String },
+    payherePaymentId: { type: String },
     payhereStatusCode: { type: String },
-    payhereMd5sig:     { type: String },
-    paidAt:            { type: Date },
+    payhereMd5sig: { type: String },
+    paidAt: { type: Date },
 
     // ── Loyalty ───────────────────────────────────────────────────────────
     // `loyaltyPointsAwarded` intentionally has no default: staying absent lets
     // the award routine claim an order with a `{ loyaltyPointsAwarded: null }`
     // filter, which matches missing-or-null and makes crediting once-only.
-    loyaltyMember:          { type: Schema.Types.ObjectId, ref: 'LoyaltyMember', index: true },
-    loyaltyPointsAwarded:   { type: Number, min: 0 },
+    loyaltyMember: { type: Schema.Types.ObjectId, ref: 'LoyaltyMember', index: true },
+    loyaltyPointsAwarded: { type: Number, min: 0 },
     loyaltyPointsAwardedAt: { type: Date },
-    loyaltyPointsRevoked:   { type: Number, min: 0 },
+    loyaltyPointsRevoked: { type: Number, min: 0 },
     loyaltyPointsRevokedAt: { type: Date },
   },
   { timestamps: true }
 );
+
+const CounterSchema = new Schema({
+  _id: { type: String, required: true },
+  seq: { type: Number, default: 0 },
+});
+
+const Counter =
+  mongoose.models.Counter || mongoose.model('Counter', CounterSchema);
+
+export async function generateOrderNumber(): Promise<string> {
+  const counter = await Counter.findOneAndUpdate(
+    { _id: 'orderNumber' },
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true }
+  );
+
+  return `CCP${String(counter.seq).padStart(6, '0')}`;
+}
 
 export default mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);

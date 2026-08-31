@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
+import { toast } from 'sonner';
 import Image from 'next/image';
 import CheckoutHeader from '@/components/checkout/CheckoutHeader';
 import ContactForm, { type ContactFormHandle } from '@/components/checkout/ContactForm';
@@ -155,7 +156,7 @@ export default function CheckoutPage() {
       router.push(`/tracker/${order._id}`);
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : 'Failed to place order. Please try again.');
+      toast.error('Failed to place order. Please try again.');
     } finally {
       setPlacing(false);
     }
