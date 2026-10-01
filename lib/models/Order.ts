@@ -34,6 +34,8 @@ export interface IOrder extends Document {
   };
   type: OrderType;
   deliveryAddress?: string;
+  deliveryArea?: string;
+  deliveryFee?: number;
   items: IOrderItem[];
   total: number;
   status: OrderStatus;
@@ -77,6 +79,8 @@ const OrderSchema = new Schema<IOrder>(
     },
     type: { type: String, enum: ['delivery', 'pickup'], required: true },
     deliveryAddress: { type: String },
+    deliveryArea: { type: String },
+    deliveryFee:  { type: Number, min: 0 },
     items: { type: [OrderItemSchema], required: true },
     total: { type: Number, required: true, min: 0 },
     status: {
