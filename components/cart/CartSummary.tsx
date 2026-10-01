@@ -6,7 +6,7 @@ import { formatDeliveryFee } from '@/lib/delivery';
 
 type Props = {
   subtotal: number;
-  deliveryFee: number;
+  deliveryFee: number | null;
   total: number;
 };
 
