@@ -4,7 +4,8 @@ import Order from '@/lib/models/Order';
 import mongoose from 'mongoose';
 import {
   buildOrderItems,
-  calculateOrderTotal,
+  calculateOrderTotals,          // was calculateOrderTotal
+  LEGACY_DELIVERY_FEE,           // new
   OrderInputError,
   serializeOrder,
 } from '@/lib/orderData';
@@ -41,6 +42,9 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
+
+    // NOTE: deliveryArea is deliberately NOT in this list. Its stored value comes
+    // from calculateOrderTotals (the canonical spelling), never straight from the body.
     const allowedFields = [
       'status',
       'type',
@@ -56,11 +60,21 @@ export async function PATCH(
       if (key in body) updateData[key] = body[key];
     }
 
+    // A blank or missing area means "not provided", not "set it to empty".
+    const requestedArea: string | undefined =
+      typeof body.deliveryArea === 'string' && body.deliveryArea.trim()
+        ? body.deliveryArea.trim()
+        : undefined;
+
     if ('type' in updateData && updateData.type !== 'delivery' && updateData.type !== 'pickup') {
       return NextResponse.json({ message: 'Invalid order type' }, { status: 400 });
     }
 
-    if (Object.keys(updateData).length === 0 && !('items' in body)) {
+    if (
+      Object.keys(updateData).length === 0 &&
+      !('items' in body) &&
+      requestedArea === undefined
+    ) {
       return NextResponse.json({ message: 'No valid fields to update' }, { status: 400 });
     }
 
@@ -80,13 +94,46 @@ export async function PATCH(
       updateData.items = orderItems;
     }
 
-    if ('items' in body || 'type' in updateData) {
-      updateData.total = calculateOrderTotal(orderItems, type);
+    // Fields to remove from the document (used when an order becomes pickup).
+    const unsetData: Record<string, ''> = {};
+
+    // Reprice only when something that affects the price was touched.
+    if ('items' in body || 'type' in updateData || requestedArea !== undefined) {
+      const area = requestedArea ?? existing.deliveryArea;
+
+      // Keep the fee this order was originally priced at ONLY when it was already a
+      // delivery order and its area isn't changing. A pickup order switching to delivery
+      // must pick an area and get today's price (its stored fee of 0 means "pickup").
+      const wasDelivery = existing.type === 'delivery';
+      const areaUnchanged = area === existing.deliveryArea;
+
+      let lockedFee: number | undefined;
+      if (type === 'delivery' && wasDelivery && areaUnchanged) {
+        lockedFee =
+          existing.deliveryFee ??
+          // Old order from before zones existed: no saved fee and no area → it was Rs 300.
+          (existing.deliveryArea ? undefined : LEGACY_DELIVERY_FEE);
+      }
+
+      // Throws OrderInputError (→ 400) if a delivery order has no valid area to price.
+      const totals = calculateOrderTotals(orderItems, type, area, lockedFee);
+
+      updateData.total = totals.total;
+      updateData.deliveryFee = totals.deliveryFee;
+
+      if (totals.deliveryArea) {
+        updateData.deliveryArea = totals.deliveryArea;
+      } else {
+        unsetData.deliveryArea = ''; // pickup: don't keep a stale area
+      }
     }
+
+    const update: Record<string, unknown> = { $set: updateData };
+    if (Object.keys(unsetData).length > 0) update.$unset = unsetData;
 
     const updated = await Order.findByIdAndUpdate(
       id,
-      { $set: updateData },
+      update,
       { new: true, runValidators: true }
     ).populate('items.menuItem').lean();
 

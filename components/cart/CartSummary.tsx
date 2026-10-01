@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
+import { formatDeliveryFee } from '@/lib/delivery';
 
 type Props = {
   subtotal: number;
@@ -23,9 +24,7 @@ export default function CartSummary({ subtotal, deliveryFee, total }: Props) {
         <span className="text-gray-500">
           {deliveryFee === 0 ? 'Pickup (no fee)' : 'Delivery Fee'}
         </span>
-        <span className="font-medium text-gray-800">
-          {deliveryFee === 0 ? 'Free' : `Rs. ${deliveryFee.toLocaleString()}`}
-        </span>
+        <span className="font-medium text-gray-700">{formatDeliveryFee(deliveryFee)}</span>
       </div>
 
       <div className="border-t border-gray-100 pt-2.5 flex justify-between">
