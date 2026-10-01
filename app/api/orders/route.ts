@@ -6,7 +6,7 @@ import connectToDatabase from '@/lib/mongodb';
 import Order, { generateOrderNumber } from '@/lib/models/Order';
 import {
   buildOrderItems,
-  calculateOrderTotal,
+  calculateOrderTotals,
   OrderInputError,
   serializeOrder,
 } from '@/lib/orderData';
@@ -14,8 +14,6 @@ import {
 function escapeRegex(str: string) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
-
-
 
 export async function GET(req: Request) {
   try {
@@ -51,7 +49,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { customer, type, deliveryAddress, items, note, paymentMethod } = body;
+    // Destructure ONCE, here. deliveryArea added.
+    const { customer, type, deliveryAddress, deliveryArea, items, note, paymentMethod } = body;
 
     if (!customer?.name || !customer?.phone || !type || !items?.length) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
@@ -68,7 +67,10 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
     const orderItems = await buildOrderItems(items, true);
-    const orderTotal = calculateOrderTotal(orderItems, type);
+
+    // Throws OrderInputError (→ 400) if a delivery order has no valid area.
+    // This runs BEFORE generateOrderNumber so a rejected order never burns a number.
+    const totals = calculateOrderTotals(orderItems, type, deliveryArea);
 
     const orderNumber = await generateOrderNumber();
 
@@ -78,7 +80,9 @@ export async function POST(req: Request) {
       type,
       deliveryAddress: type === 'delivery' ? deliveryAddress : undefined,
       items: orderItems,
-      total: orderTotal,
+      total: totals.total,
+      deliveryArea: totals.deliveryArea,
+      deliveryFee: totals.deliveryFee,
       note,
       paymentMethod,
       paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'pending',
