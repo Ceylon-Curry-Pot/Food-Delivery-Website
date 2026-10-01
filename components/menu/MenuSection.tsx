@@ -4,27 +4,42 @@ import { useMemo, useState } from 'react';
 import SectionHeader from '@/components/home/SectionHeader';
 import MenuFilters from './MenuFilters';
 import MenuGrid from './MenuGrid';
-import { menuCategories, type MenuDish, type MenuCategory } from '@/lib/menu';
+import type { MenuDish, MenuCategory } from '@/lib/menu';
 
 type Props = {
   dishes: MenuDish[];
+  categories: string[];
 };
 
-export default function MenuSection({ dishes }: Props) {
-  const [search,         setSearch]         = useState('');
-  const [activeCategory, setActiveCategory] = useState<MenuCategory>('All');
+export default function MenuSection({ dishes, categories }: Props) {
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] =
+    useState<MenuCategory>('All');
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+
     return dishes.filter((d) => {
-      const matchesCategory = activeCategory === 'All' || d.category === activeCategory;
-      const matchesSearch   =
+      const matchesCategory =
+        activeCategory === 'All' ||
+        d.category === activeCategory;
+
+      const matchesSearch =
         q.length === 0 ||
         d.name.toLowerCase().includes(q) ||
-        d.description.some((x) => x.toLowerCase().includes(q));
+        d.description.some((x) =>
+          x.toLowerCase().includes(q)
+        );
+
       return matchesCategory && matchesSearch;
     });
   }, [dishes, search, activeCategory]);
+
+  const availableCategories = categories.filter(
+    (cat) =>
+      cat === 'All' ||
+      dishes.some((d) => d.category === cat)
+  );
 
   return (
     <div>
@@ -37,14 +52,11 @@ export default function MenuSection({ dishes }: Props) {
       <MenuFilters
         search={search}
         onSearchChange={setSearch}
-        categories={menuCategories.filter(
-          (cat) => cat === 'All' || dishes.some((d) => d.category === cat)
-        )}
+        categories={availableCategories}
         activeCategory={activeCategory}
         onCategoryChange={setActiveCategory}
       />
 
-      {/* No onAdd — MenuDishCard reads the cart store and manages itself */}
       <MenuGrid dishes={filtered} />
     </div>
   );
