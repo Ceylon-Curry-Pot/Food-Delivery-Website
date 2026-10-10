@@ -8,25 +8,25 @@ import { useLoyaltyStore } from '@/components/loyalty/useLoyaltyStore';
 import { fetchMyOrders, type LoyaltyOrderSummary, type LoyaltyOrderStatus } from '@/lib/loyaltyApi';
 
 const STATUS_LABELS: Record<LoyaltyOrderStatus, string> = {
-  pending:          'Order Received',
-  confirmed:        'Confirmed',
-  preparing:        'Being Prepared',
+  pending: 'Order Received',
+  confirmed: 'Confirmed',
+  preparing: 'Being Prepared',
   out_for_delivery: 'Out for Delivery',
-  delivered:        'Delivered',
-  cancelled:        'Cancelled',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
 };
 
 const STATUS_COLORS: Record<LoyaltyOrderStatus, string> = {
-  pending:          'bg-yellow-50 text-yellow-700 border-yellow-200',
-  confirmed:        'bg-blue-50 text-blue-700 border-blue-200',
-  preparing:        'bg-orange-50 text-orange-700 border-orange-200',
+  pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  confirmed: 'bg-blue-50 text-blue-700 border-blue-200',
+  preparing: 'bg-orange-50 text-orange-700 border-orange-200',
   out_for_delivery: 'bg-purple-50 text-purple-700 border-purple-200',
-  delivered:        'bg-green-50 text-green-700 border-green-200',
-  cancelled:        'bg-red-50 text-red-700 border-red-200',
+  delivered: 'bg-green-50 text-green-700 border-green-200',
+  cancelled: 'bg-red-50 text-red-700 border-red-200',
 };
 
 function MyOrdersPanel() {
-  const [orders, setOrders]   = useState<LoyaltyOrderSummary[] | null>(null);
+  const [orders, setOrders] = useState<LoyaltyOrderSummary[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -87,7 +87,7 @@ export default function TrackerPage() {
   const router = useRouter();
   const member = useLoyaltyStore((s) => s.member);
   const [orderId, setOrderId] = useState('');
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -150,7 +150,7 @@ export default function TrackerPage() {
               type="text"
               value={orderId}
               onChange={(e) => { setOrderId(e.target.value); setError(''); }}
-              placeholder="e.g. CEY123456"
+              placeholder="e.g. CCP123456"
               className="w-full pl-11 pr-4 py-3.5 border border-gray-200 rounded-xl text-sm text-gray-900
                          placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400
                          transition-all font-mono tracking-wider uppercase"
@@ -174,7 +174,7 @@ export default function TrackerPage() {
         {/* Helper */}
         <p className="text-center text-xs text-gray-400 mt-6">
           Your order number was shown on the confirmation page and starts with{' '}
-          <span className="font-mono font-semibold text-gray-600">CEY</span>
+          <span className="font-mono font-semibold text-gray-600">CCP</span>
         </p>
       </div>
     </main>

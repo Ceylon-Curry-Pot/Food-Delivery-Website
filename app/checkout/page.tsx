@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
+import { toast } from 'sonner';
 import Image from 'next/image';
 import CheckoutHeader from '@/components/checkout/CheckoutHeader';
 import ContactForm, { type ContactFormHandle } from '@/components/checkout/ContactForm';
@@ -17,6 +18,7 @@ import {
 import { useLoyaltyStore } from '@/components/loyalty/useLoyaltyStore';
 import { awardOrderPoints, previewOrderPoints, type PointsPreview } from '@/lib/loyaltyApi';
 import { ShoppingBag, ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { formatDeliveryFee } from '@/lib/delivery';
 
 export default function CheckoutPage() {
   const router      = useRouter();
@@ -84,9 +86,12 @@ export default function CheckoutPage() {
 
     const contactData = contactRef.current?.getData();
     const addressData = addressRef.current?.getData();
+
+    // city → area
     const deliveryAddress = orderType === 'delivery'
-      ? `${addressData?.street}, ${addressData?.city}${addressData?.postal ? ', ' + addressData.postal : ''}${addressData?.instructions ? '. ' + addressData.instructions : ''}`
+      ? `${addressData?.street}, ${addressData?.area}${addressData?.postal ? ', ' + addressData.postal : ''}${addressData?.instructions ? '. ' + addressData.instructions : ''}`
       : undefined;
+
     const orderPayload = {
       customer: {
         name:  contactData?.name,
@@ -95,6 +100,8 @@ export default function CheckoutPage() {
       },
       type: orderType,
       deliveryAddress,
+      // The server prices the order from this. No fee is sent from the browser.
+      deliveryArea: orderType === 'delivery' ? addressData?.area : undefined,
       items: items.map((i) => ({
         menuItem: i.id,
         qty: i.quantity,
@@ -155,7 +162,7 @@ export default function CheckoutPage() {
       router.push(`/tracker/${order._id}`);
     } catch (err) {
       console.error(err);
-      alert(err instanceof Error ? err.message : 'Failed to place order. Please try again.');
+      toast.error('Failed to place order. Please try again.');
     } finally {
       setPlacing(false);
     }
@@ -248,9 +255,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-gray-500">
                   <span>{orderType === 'pickup' ? 'Pickup (no fee)' : 'Delivery Fee'}</span>
-                  <span className="font-medium text-gray-700">
-                    {deliveryFee === 0 ? 'Free' : `Rs. ${deliveryFee.toLocaleString()}`}
-                  </span>
+                  <span className="font-medium text-gray-700">{formatDeliveryFee(deliveryFee)}</span>
                 </div>
               </div>
 

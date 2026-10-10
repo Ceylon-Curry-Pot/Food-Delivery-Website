@@ -1,37 +1,45 @@
 'use client';
 
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { useCartStore } from '@/components/global/useCartStore';
+import { findDeliveryArea, deliveryAreas, formatDeliveryFee } from '@/lib/delivery';
 
 export type DeliveryAddressFormHandle = {
   validate: () => boolean;
-  getData: () => { street: string; city: string; postal: string; instructions: string };
+  getData: () => { street: string; area: string; postal: string; instructions: string }; // city → area
 };
 
 const DeliveryAddressForm = forwardRef<DeliveryAddressFormHandle>((_, ref) => {
-  const orderType      = useCartStore((s) => s.orderType);
+  const orderType       = useCartStore((s) => s.orderType);
+  const deliveryArea    = useCartStore((s) => s.deliveryArea);
+  const setDeliveryArea = useCartStore((s) => s.setDeliveryArea);
+
   const streetRef      = useRef<HTMLInputElement>(null);
-  const cityRef        = useRef<HTMLInputElement>(null);
   const postalRef      = useRef<HTMLInputElement>(null);
   const instructionRef = useRef<HTMLInputElement>(null);
+
+  const [areaError, setAreaError] = useState(false);
+  const match = findDeliveryArea(deliveryArea);
 
   useImperativeHandle(ref, () => ({
     validate() {
       if (orderType === 'pickup') return true;
       let ok = true;
-      [streetRef, cityRef].forEach((r) => {
-        if (!r.current?.value.trim()) {
-          r.current?.classList.add('border-red-400', 'bg-red-50');
-          ok = false;
-        }
-      });
+      if (!streetRef.current?.value.trim()) {
+        streetRef.current?.classList.add('border-red-400', 'bg-red-50');
+        ok = false;
+      }
+      if (!match) {
+        setAreaError(true);
+        ok = false;
+      }
       return ok;
     },
     getData() {
       return {
-        street:       streetRef.current?.value.trim()     ?? '',
-        city:         cityRef.current?.value.trim()        ?? '',
+        street:       streetRef.current?.value.trim()      ?? '',
+        area:         match?.area ?? '', // canonical spelling from our list, not raw typing
         postal:       postalRef.current?.value.trim()      ?? '',
         instructions: instructionRef.current?.value.trim() ?? '',
       };
@@ -81,22 +89,43 @@ const DeliveryAddressForm = forwardRef<DeliveryAddressFormHandle>((_, ref) => {
             placeholder="123 Main Street, Apt 4B"
             onChange={(e) => clearError(e.target)}
             className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400
-                       outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
+                      outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
           />
         </div>
 
+        {/* Delivery area: type-ahead + dropdown, replaces the old City input */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            City <span className="text-red-500">*</span>
+            Delivery Area <span className="text-red-500">*</span>
           </label>
           <input
-            ref={cityRef}
-            type="text"
-            placeholder="Colombo"
-            onChange={(e) => clearError(e.target)}
-            className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400
-                       outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
+            list="delivery-areas"
+            value={deliveryArea}
+            onChange={(e) => {
+              setDeliveryArea(e.target.value);
+              setAreaError(false);
+            }}
+            placeholder="Start typing, e.g. Nugegoda"
+            autoComplete="off"
+            className={`border rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400
+                        outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all
+                        ${areaError ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}
           />
+          <datalist id="delivery-areas">
+            {deliveryAreas.map((a) => (
+              <option key={a} value={a} />
+            ))}
+          </datalist>
+
+          {match ? (
+            <p className="text-xs text-emerald-600">
+              ✓ Delivery available · {formatDeliveryFee(match.zone.fee)}
+            </p>
+          ) : deliveryArea.trim() ? (
+            <p className="text-xs text-red-500">
+              We don&apos;t deliver there yet. Please pick an area from the list.
+            </p>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -121,7 +150,7 @@ const DeliveryAddressForm = forwardRef<DeliveryAddressFormHandle>((_, ref) => {
             type="text"
             placeholder="Gate code, landmark, floor number…"
             className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400
-                       outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
+                      outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition-all"
           />
         </div>
       </div>

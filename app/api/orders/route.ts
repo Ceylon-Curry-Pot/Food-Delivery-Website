@@ -3,10 +3,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { sendOrderConfirmation } from '@/lib/sendOrderConfirmation';
 import connectToDatabase from '@/lib/mongodb';
-import Order from '@/lib/models/Order';
+import Order, { generateOrderNumber } from '@/lib/models/Order';
 import {
   buildOrderItems,
-  calculateOrderTotal,
+  calculateOrderTotals,
   OrderInputError,
   serializeOrder,
 } from '@/lib/orderData';
@@ -79,10 +79,12 @@ export async function POST(req: Request) {
 
     await connectToDatabase();
     const orderItems = await buildOrderItems(items, true);
-    const orderTotal = calculateOrderTotal(orderItems, type);
 
-    const timestamp   = Date.now().toString().slice(-6);
-    const orderNumber = `CEY${timestamp}`;
+    // Throws OrderInputError (→ 400) if a delivery order has no valid area.
+    // This runs BEFORE generateOrderNumber so a rejected order never burns a number.
+    const totals = calculateOrderTotals(orderItems, type, deliveryArea);
+
+    const orderNumber = await generateOrderNumber();
 
     const order = await Order.create({
       orderNumber,
@@ -90,7 +92,9 @@ export async function POST(req: Request) {
       type,
       deliveryAddress: type === 'delivery' ? deliveryAddress : undefined,
       items: orderItems,
-      total: orderTotal,
+      total: totals.total,
+      deliveryArea: totals.deliveryArea,
+      deliveryFee: totals.deliveryFee,
       note,
       paymentMethod,
       paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'pending',
@@ -104,28 +108,28 @@ export async function POST(req: Request) {
     // Send confirmation email — wrapped in try/catch so a Resend failure
     // never blocks or breaks the order response
     if (serialized.customer?.email) {
-  try {
-    type SerializedItem = { name: string; qty: number; price: number };
+      try {
+        type SerializedItem = { name: string; qty: number; price: number };
 
-    await sendOrderConfirmation({
-      customerName:    serialized.customer.name,
-      customerEmail:   serialized.customer.email,
-      trackingId:      serialized.orderNumber,
-      orderId:         serialized._id,
-      total:           serialized.total,
-      orderType:       serialized.type,
-      deliveryAddress: serialized.deliveryAddress,
-      paymentMethod:   serialized.paymentMethod,
-      items:           (serialized.items as SerializedItem[]).map((i) => ({
-        name:  i.name,
-        qty:   i.qty,
-        price: i.price,
-      })),
-    });
-  } catch (emailError) {
-    console.error('[Email] Failed to send order confirmation:', emailError);
-  }
-}
+        await sendOrderConfirmation({
+          customerName: serialized.customer.name,
+          customerEmail: serialized.customer.email,
+          trackingId: serialized.orderNumber,
+          orderId: serialized._id,
+          total: serialized.total,
+          orderType: serialized.type,
+          deliveryAddress: serialized.deliveryAddress,
+          paymentMethod: serialized.paymentMethod,
+          items: (serialized.items as SerializedItem[]).map((i) => ({
+            name: i.name,
+            qty: i.qty,
+            price: i.price,
+          })),
+        });
+      } catch (emailError) {
+        console.error('[Email] Failed to send order confirmation:', emailError);
+      }
+    }
 
     return NextResponse.json(serialized, { status: 201 });
   } catch (error) {

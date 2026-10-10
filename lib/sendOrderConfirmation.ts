@@ -27,12 +27,12 @@ export async function sendOrderConfirmation({
     return;
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://';
   const trackingUrl = `${baseUrl}/tracker/${orderId}`;
 
   const paymentLabel: Record<string, string> = {
-    cod:    'Cash on Delivery',
-    card:   'Credit / Debit Card (PayHere)',
+    cod: 'Cash on Delivery',
+    card: 'Credit / Debit Card (PayHere)',
     wallet: 'Digital Wallet (PayHere)',
   };
 
@@ -190,8 +190,8 @@ export async function sendOrderConfirmation({
                   <td style="font-size:13px;color:#92400e;line-height:1.6;">
                     ⏱ <strong>Estimated time:</strong>
                     ${orderType === 'delivery'
-                      ? 'Your order should arrive in approximately <strong>35–45 minutes</strong>.'
-                      : 'Your order will be ready for pickup in approximately <strong>25–30 minutes</strong>.'}
+        ? 'Your order should arrive in approximately <strong>35–45 minutes</strong>.'
+        : 'Your order will be ready for pickup in approximately <strong>25–30 minutes</strong>.'}
                   </td>
                 </tr>
               </table>

@@ -67,7 +67,7 @@ export default function TermsPage() {
                 'By placing an order you confirm you are at least 18 years old and authorised to use the payment method provided.',
                 'All orders are subject to availability. If an item becomes unavailable after you order, we will contact you to offer a substitute or refund.',
                 'You are responsible for providing accurate contact and delivery information. Ceylon Curry Pot is not liable for failed deliveries due to incorrect information.',
-                'Order confirmation is sent via the on-screen tracker page. An order is only confirmed once you receive an order number (starting with CEY).',
+                'Order confirmation is sent via the on-screen tracker page. An order is only confirmed once you receive an order number (starting with CCP).',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-gray-600">
                   <span className="mt-1.5 w-2 h-2 rounded-full bg-red-400 shrink-0" />

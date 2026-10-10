@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 import MenuItem from '@/lib/models/MenuItem';
+import { findDeliveryArea } from '@/lib/delivery';
 
-export const DELIVERY_FEE = 300;
+export const LEGACY_DELIVERY_FEE = 300; // only for orders created before zones existed
 
 type IncomingOrderItem = {
   menuItem?: string;
@@ -117,12 +118,30 @@ export async function buildOrderItems(items: IncomingOrderItem[], requireAvailab
   });
 }
 
-export function calculateOrderTotal(
+export function calculateOrderTotals(
   items: Array<{ qty: number; price: number }>,
-  type: 'delivery' | 'pickup'
+  type: 'delivery' | 'pickup',
+  deliveryArea?: string,
+  lockedFee?: number, // reuse an order's saved fee instead of today's price
 ) {
-  const subtotal = items.reduce((sum, item) => sum + item.qty * item.price, 0);
-  return subtotal + (type === 'delivery' ? DELIVERY_FEE : 0);
+  const subtotal = items.reduce((sum, i) => sum + i.qty * i.price, 0);
+
+  if (type === 'pickup') {
+    return { subtotal, deliveryFee: 0, deliveryArea: undefined, total: subtotal };
+  }
+
+  const match = findDeliveryArea(deliveryArea);
+  if (!match && lockedFee === undefined) {
+    throw new OrderInputError('Please choose a valid delivery area from the list');
+  }
+
+  const deliveryFee = lockedFee ?? match!.zone.fee;
+  return {
+    subtotal,
+    deliveryFee,
+    deliveryArea: match?.area ?? deliveryArea,
+    total: subtotal + deliveryFee,
+  };
 }
 
 export function serializeOrder(order: SerializableOrder): SerializedOrder {

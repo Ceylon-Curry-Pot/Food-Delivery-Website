@@ -5,6 +5,7 @@ declare module 'next-auth' {
   interface User {
     id?: string;
     role?: string;
+    approved?: boolean;
     accountType?: 'admin' | 'loyalty';
     tier?: string;
     points?: number;
@@ -27,6 +28,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id?: string;
     role?: string;
+    approved?: boolean;
     accountType?: 'admin' | 'loyalty';
     tier?: string;
     points?: number;

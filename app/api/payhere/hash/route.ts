@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectToDatabase from '@/lib/mongodb';
-import Order from '@/lib/models/Order';
+import Order, { generateOrderNumber } from '@/lib/models/Order';
 import {
   buildOrderItems,
-  calculateOrderTotal,
+  calculateOrderTotals,            // was calculateOrderTotal
   OrderInputError,
   serializeOrder,
 } from '@/lib/orderData';
@@ -21,7 +21,7 @@ import {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { customer, type, deliveryAddress, items, note } = body;
+    const { customer, type, deliveryAddress, deliveryArea, items, note } = body; // deliveryArea added
 
     if (!customer?.name || !customer?.phone || !type || !items?.length) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
@@ -42,10 +42,9 @@ export async function POST(req: Request) {
     await connectToDatabase();
 
     const orderItems = await buildOrderItems(items, true);
-    const total = calculateOrderTotal(orderItems, type);
-    const amount = formatPayhereAmount(total);
-    const timestamp = Date.now().toString().slice(-6);
-    const orderNumber = `CEY${timestamp}`;
+    const totals = calculateOrderTotals(orderItems, type, deliveryArea); // `totals`, not `total`
+    const amount = formatPayhereAmount(totals.total);
+    const orderNumber = await generateOrderNumber();
     const { firstName, lastName } = splitCustomerName(customer.name);
 
     const order = await Order.create({
@@ -54,7 +53,9 @@ export async function POST(req: Request) {
       type,
       deliveryAddress: type === 'delivery' ? deliveryAddress : undefined,
       items: orderItems,
-      total,
+      total: totals.total,
+      deliveryArea: totals.deliveryArea,
+      deliveryFee: totals.deliveryFee,
       note,
       paymentMethod: 'payhere',
       paymentStatus: 'pending',
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
       email: customer.email || 'customer@example.com',
       phone: customer.phone,
       address: deliveryAddress || 'Pickup at Ceylon Curry Pot',
-      city: type === 'delivery' ? 'Colombo' : 'Colombo',
+      city: totals.deliveryArea ?? 'Colombo',
       country: 'Sri Lanka',
       custom_1: order._id.toString(),
       custom_2: orderNumber,

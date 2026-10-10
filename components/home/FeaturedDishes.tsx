@@ -2,7 +2,6 @@
 
 import DishCard from './DishCard';
 import SectionHeader from './SectionHeader';
-import { useCartStore } from '@/components/global/useCartStore';
 import Link from 'next/link';
 import { Flame, Bike, Leaf, Star } from 'lucide-react';
 import type { MenuDish } from '@/lib/menu';
@@ -19,19 +18,6 @@ const WHY_US = [
 ];
 
 export default function FeaturedDishes({ dishes }: Props) {
-  const addItem = useCartStore((state) => state.addItem);
-
-  const handleAddToCart = (id: string) => {
-    const dish = dishes.find((d) => d.id === id);
-    if (!dish) return;
-    addItem({
-      id: dish.id,
-      name: dish.name,
-      price: dish.price,
-      image: dish.image,
-    });
-  };
-
   return (
     <>
       {/* Featured dishes */}
@@ -44,9 +30,10 @@ export default function FeaturedDishes({ dishes }: Props) {
           />
 
           {dishes.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {dishes.slice(0, 6).map((dish) => (
-                <DishCard key={dish.id} {...dish} onAdd={handleAddToCart} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+              {dishes.slice(0, 4).map((dish) => (
+                // No onAdd — DishCard reads the cart store and manages itself
+                <DishCard key={dish.id} {...dish} />
               ))}
             </div>
           ) : (
@@ -64,18 +51,8 @@ export default function FeaturedDishes({ dishes }: Props) {
               className="inline-flex items-center gap-2 bg-red-600 text-white px-8 py-3.5 rounded-full font-semibold hover:bg-red-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
             >
               View Full Menu
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2.5}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
               </svg>
             </Link>
           </div>

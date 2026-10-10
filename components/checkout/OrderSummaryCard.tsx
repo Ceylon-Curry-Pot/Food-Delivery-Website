@@ -8,6 +8,7 @@ import {
 } from '@/components/global/useCartStore';
 import { ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import { formatDeliveryFee } from '@/lib/delivery';
 
 export default function OrderSummaryCard({
   buttonText,
@@ -59,9 +60,7 @@ export default function OrderSummaryCard({
         </div>
         <div className="flex justify-between text-gray-500">
           <span>{orderType === 'pickup' ? 'Pickup (no fee)' : 'Delivery Fee'}</span>
-          <span className="font-medium text-gray-700">
-            {deliveryFee === 0 ? 'Free' : `Rs. ${deliveryFee.toLocaleString()}`}
-          </span>
+          <span className="font-medium text-gray-700">{formatDeliveryFee(deliveryFee)}</span>
         </div>
       </div>
 
