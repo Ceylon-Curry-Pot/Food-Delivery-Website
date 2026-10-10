@@ -12,6 +12,8 @@ export interface ILoyaltyMember extends Document {
   tier: LoyaltyTierValue;
   memberSince: Date;
   memberNumber: string;
+  failedLoginAttempts?: number;
+  lockUntil?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +29,8 @@ const LoyaltyMemberSchema: Schema = new Schema(
     tier:         { type: String, enum: ['Clove', 'Cinnamon', 'Saffron', 'Cardamom'], default: 'Clove' },
     memberSince:  { type: Date, default: Date.now },
     memberNumber: { type: String, required: true, unique: true },
+    failedLoginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date, default: null },
   },
   { timestamps: true }
 );

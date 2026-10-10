@@ -8,6 +8,8 @@ export interface IUser extends Document {
   approved: boolean;
   requestedAt: Date;
   approvedAt?: Date;
+  failedLoginAttempts?: number;
+  lockUntil?: Date | null;
 }
 
 const UserSchema: Schema = new Schema({
@@ -17,7 +19,9 @@ const UserSchema: Schema = new Schema({
   role: { type: String, enum: ['admin', 'staff'], default: 'staff' },
   approved: { type: Boolean, default: false },
   requestedAt: { type: Date, default: Date.now },
-  approvedAt: { type: Date }
+  approvedAt: { type: Date },
+  failedLoginAttempts: { type: Number, default: 0 },
+  lockUntil: { type: Date, default: null },
 });
 
 export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
