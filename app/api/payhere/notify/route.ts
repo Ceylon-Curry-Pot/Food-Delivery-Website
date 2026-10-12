@@ -8,6 +8,7 @@ import {
   type PayhereNotifyPayload,
   verifyPayhereNotification,
 } from '@/lib/payhere';
+import { logSecurityEvent } from '@/lib/securityLog';
 
 export async function POST(req: Request) {
   try {
@@ -30,7 +31,8 @@ export async function POST(req: Request) {
     }
 
     if (!verifyPayhereNotification(notification)) {
-      console.error('[POST /api/payhere/notify] Invalid md5sig', {
+      logSecurityEvent('webhook_signature_invalid', {
+        source: 'payhere',
         orderId: notification.order_id,
         paymentId: notification.payment_id,
       });

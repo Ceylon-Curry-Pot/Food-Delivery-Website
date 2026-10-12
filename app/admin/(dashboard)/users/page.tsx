@@ -8,8 +8,8 @@ import UsersPageClient from "./_components/UsersPageClient"; // Added client wra
 export default async function UserManagementPage() {
   await connectToDatabase();
   
-  // Fetch all users
-  const rawUsers = await User.find().sort({ createdAt: -1 }).lean();
+  // Fetch all users (never send password hashes to the client)
+  const rawUsers = await User.find().select('-password').sort({ createdAt: -1 }).lean();
   
   const serializedUsers = rawUsers.map((u: any) => ({
     ...u,
