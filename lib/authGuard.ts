@@ -1,37 +1,23 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import mongoose from 'mongoose';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { logSecurityEvent } from '@/lib/securityLog';
+import { can, isRole, type Permission, type Role } from '@/lib/permissions';
 
-type SessionUser = {
-  id?: string;
-  role?: string;
-  accountType?: string;
-  email?: string | null;
-};
+export type AdminUser = { id: string; name: string; email: string; role: Role };
 
 type GuardResult =
-  | { user: SessionUser; response: null }
+  | { user: AdminUser; response: null }
   | { user: null; response: NextResponse };
 
-function unauthorized(req: Request, reason: string) {
-  logSecurityEvent('permission_denied', { path: new URL(req.url).pathname, reason });
-  return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-}
-
-function forbidden(req: Request, reason: string, userId?: string) {
-  logSecurityEvent('permission_denied', { path: new URL(req.url).pathname, reason, userId });
-  return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
-}
-
-/** Rejects a state-changing request whose Origin header doesn't match our own —
- *  defense in depth on top of the SameSite=Lax session cookie, which already
- *  blocks cross-site fetch/POST from carrying the cookie in the first place. */
+/** Rejects a state-changing request whose Origin header doesn't match our own, as defence
+ *  in depth on top of the SameSite=Lax session cookie. */
 function originIsTrusted(req: Request): boolean {
   const origin = req.headers.get('origin');
-  if (!origin) return true; // same-origin navigations/tools that omit Origin
+  if (!origin) return true; // same-origin navigations and tools that omit Origin
 
   const allowed = process.env.NEXTAUTH_URL || new URL(req.url).origin;
   try {
@@ -42,54 +28,55 @@ function originIsTrusted(req: Request): boolean {
 }
 
 /**
- * Reads the caller's admin session without enforcing anything or logging a
- * denial — for routes that behave differently for admins vs. anonymous
- * callers but treat "anonymous" as a normal, expected case (e.g. the public
- * staff sign-up form) rather than a rejected request.
+ * Who is signed in as admin/staff right now? Reads the session, then confirms against
+ * the database. The login token is a snapshot taken at sign-in, so the DATABASE decides
+ * the current role, and a deleted or unapproved user is rejected even with a valid token.
+ * Returns null for anonymous visitors and customer (loyalty) sessions.
  */
-export async function getAdminSession(): Promise<SessionUser | null> {
+export async function getCurrentAdmin(): Promise<AdminUser | null> {
   const session = await getServerSession(authOptions);
-  const user = session?.user as SessionUser | undefined;
-  return user?.accountType === 'admin' ? user : null;
+  const sessionUser = session?.user;
+
+  if (!sessionUser || sessionUser.accountType !== 'admin' || !sessionUser.id) return null;
+  if (!mongoose.Types.ObjectId.isValid(sessionUser.id)) return null;
+
+  await connectToDatabase();
+  const dbUser = (await User.findById(sessionUser.id)
+    .select('name email role approved')
+    .lean()) as { _id: unknown; name: string; email: string; role: string; approved?: boolean } | null;
+
+  if (!dbUser || !isRole(dbUser.role)) return null;
+  if (dbUser.role === 'staff' && !dbUser.approved) return null; // same rule as login
+
+  return { id: String(dbUser._id), name: dbUser.name, email: dbUser.email, role: dbUser.role };
 }
 
-/**
- * Guards admin-surface API routes. Mirrors the access rule the /admin
- * dashboard layout already enforces: a signed-in admin, or a signed-in staff
- * member who is currently approved (re-checked against the DB, since staff
- * approval isn't carried in the JWT and can be revoked mid-session).
- */
-export async function requireAdmin(req: Request): Promise<GuardResult> {
+/** Use at the top of an API route:
+ *    const { user, response } = await requirePermission(req, 'menu:manage');
+ *    if (response) return response; */
+export async function requirePermission(req: Request, permission: Permission): Promise<GuardResult> {
+  const path = new URL(req.url).pathname;
+
   if (!originIsTrusted(req)) {
-    return { user: null, response: forbidden(req, 'cross-origin') };
+    logSecurityEvent('permission_denied', { path, reason: 'cross-origin' });
+    return { user: null, response: NextResponse.json({ message: 'Forbidden' }, { status: 403 }) };
   }
 
-  const session = await getServerSession(authOptions);
-  const user = session?.user as SessionUser | undefined;
-
-  if (!user || user.accountType !== 'admin') {
-    return { user: null, response: unauthorized(req, 'no-session') };
+  const user = await getCurrentAdmin();
+  if (!user) {
+    logSecurityEvent('permission_denied', { path, reason: 'no-session' });
+    return { user: null, response: NextResponse.json({ message: 'Unauthorized' }, { status: 401 }) };
   }
 
-  if (user.role === 'staff') {
-    await connectToDatabase();
-    const dbUser = user.email ? await User.findOne({ email: user.email }).lean() : null;
-    if (!dbUser || !(dbUser as { approved?: boolean }).approved) {
-      return { user: null, response: forbidden(req, 'not-approved', user.id) };
-    }
+  if (!can(user.role, permission)) {
+    logSecurityEvent('permission_denied', {
+      path, reason: 'insufficient-role', permission, userId: user.id, role: user.role,
+    });
+    return {
+      user: null,
+      response: NextResponse.json({ message: 'You do not have permission to do this' }, { status: 403 }),
+    };
   }
 
   return { user, response: null };
-}
-
-/** Stricter guard for sensitive operations (approving/removing accounts): admin role only. */
-export async function requireAdminRole(req: Request): Promise<GuardResult> {
-  const result = await requireAdmin(req);
-  if (result.response) return result;
-
-  if (result.user.role !== 'admin') {
-    return { user: null, response: forbidden(req, 'insufficient-role', result.user.id) };
-  }
-
-  return result;
 }
