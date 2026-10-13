@@ -5,6 +5,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const crypto = require('crypto');
 
 // Load .env from project root
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
@@ -20,7 +21,7 @@ const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String },
-  role: { type: String, enum: ['admin', 'staff'], default: 'staff' },
+  role: { type: String, enum: ['admin', 'staff', 'super_admin'], default: 'staff' },
   approved: { type: Boolean, default: false },
   requestedAt: { type: Date, default: Date.now },
   approvedAt: { type: Date },
@@ -44,22 +45,24 @@ async function seed() {
       process.exit(0);
     }
 
-    const hashedPassword = await bcrypt.hash('Admin@123', 10);
+  const password = process.env.SEED_ADMIN_PASSWORD || crypto.randomBytes(12).toString('base64url');
+  if (password.length < 8) {
+    console.error('ERROR: SEED_ADMIN_PASSWORD must be at least 8 characters');
+    process.exit(1);
+  }
+  const hashedPassword = await bcrypt.hash(password, 12);
 
     await User.create({
       name: 'Super Admin',
       email,
       password: hashedPassword,
-      role: 'admin',
+      role: 'super_admin',
       approved: true,
     });
 
-    console.log('\n✅ Admin user seeded successfully!');
-    console.log('─────────────────────────────────');
-    console.log('Email:    admin@ceyloncurrypot.lk');
-    console.log('Password: Admin@123');
-    console.log('Role:     admin');
-    console.log('─────────────────────────────────');
+    console.log('\n✅ Super admin seeded. Save this password now, it is not shown again:');
+    console.log(`Email:    ${email}`);
+    console.log(`Password: ${password}`);
     process.exit(0);
   } catch (err) {
     console.error('Error seeding database:', err);
