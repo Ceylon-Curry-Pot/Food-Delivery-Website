@@ -4,8 +4,9 @@ import MenuItem from '@/lib/models/MenuItem';
 import { revalidatePath } from 'next/cache';
 import { getR2PublicBaseUrl, uploadToR2 } from '@/lib/r2';
 import { validateImageUpload, buildImageKey, ImageUploadError } from '@/lib/imageUpload';
-import { requireAdmin } from '@/lib/authGuard';
+import { requirePermission } from '@/lib/authGuard';
 import { logSecurityEvent } from '@/lib/securityLog';
+import { can } from '@/lib/permissions';
 
 export const runtime = 'nodejs';
 
@@ -23,7 +24,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { user, response } = await requireAdmin(req);
+  const { user, response } = await requirePermission(req, 'menu:manage');
   if (response) return response;
 
   try {
@@ -39,6 +40,7 @@ export async function PATCH(
     const existingItem = await MenuItem.findById(id).lean<{
       imageUrl?: string;
       image?: string;
+      price?: number;
     }>();
 
     if (!existingItem) {
@@ -49,12 +51,18 @@ export async function PATCH(
 
     if (typeof payload.name === 'string') updateData.name = payload.name.trim();
     if (payload.price !== undefined) {
-      const parsedPrice = Number(payload.price);
-      if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
-        return NextResponse.json({ message: 'Price must be a valid positive number' }, { status: 400 });
-      }
-      updateData.price = parsedPrice;
+  const parsedPrice = Number(payload.price);
+  if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
+    return NextResponse.json({ message: 'Price must be a valid positive number' }, { status: 400 });
+  }
+  // Re-saving the same price is fine. Only an actual change needs the permission.
+  if (parsedPrice !== existingItem.price) {
+    if (!can(user!.role, 'menu:set_price')) {
+      return NextResponse.json({ message: 'Only admins can change prices' }, { status: 403 });
     }
+    updateData.price = parsedPrice;
+    }
+  }
     if (typeof payload.category === 'string') updateData.category = payload.category;
     if (typeof payload.description === 'string') updateData.description = payload.description.trim();
     if (payload.available !== undefined) updateData.available = parseBoolean(payload.available, true);
@@ -122,7 +130,7 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { user, response } = await requireAdmin(req);
+  const { user, response } = await requirePermission(req, 'menu:manage');
   if (response) return response;
 
   try {
