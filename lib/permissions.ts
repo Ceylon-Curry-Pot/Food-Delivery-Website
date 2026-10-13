@@ -18,13 +18,13 @@ export type Permission =
     | 'users:delete';
 
 const MIN_ROLE: Record<Permission, Role> = {
-    'orders:manage': 'staff',
-    'menu:manage': 'admin',
-    'menu:set_price': 'admin',
-    'users:view': 'staff',
-    'users:create': 'admin',
-    'users:edit': 'admin',
-    'users:delete': 'super_admin',
+    'orders:manage':    'staff',
+    'menu:manage':      'staff',
+    'menu:set_price':   'admin',
+    'users:view':       'admin',
+    'users:create':     'admin',
+    'users:edit':       'admin',
+    'users:delete':     'admin',
 };
 
 export const isRole = (v: unknown): v is Role =>
@@ -35,7 +35,7 @@ const rank = (role: unknown) => (isRole(role) ? ROLE_RANK[role] : 0);
 export const can = (role: unknown, permission: Permission) =>
     isRole(role) && rank(role) >= rank(MIN_ROLE[permission]);
 
-/** You can only hand out roles up to your own. Admins can't mint super admins. */
+/** You can only hand out roles up to your own. Admins can't create super admins. */
 export const canAssignRole = (actor: Role, newRole: Role) => rank(newRole) <= rank(actor);
 
 /** You can only change or delete people at or below your own rank. */
