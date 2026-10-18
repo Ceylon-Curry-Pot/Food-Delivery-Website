@@ -9,7 +9,7 @@ type Props = {
 
 export default function CategoryPills({ categories, active, onChange }: Props) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-3">
       {categories.map((cat) => {
         const isActive = cat === active;
         return (
