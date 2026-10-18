@@ -169,7 +169,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 py-10">
+    <main className="min-h-screen py-10">
       {/* <Script
         src="https://www.payhere.lk/lib/payhere.js"
         strategy="afterInteractive"

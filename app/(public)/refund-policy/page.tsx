@@ -10,7 +10,7 @@ const LAST_UPDATED = 'July 7, 2026';
 
 export default function RefundPolicyPage() {
   return (
-    <main className="bg-gray-50 min-h-screen">
+    <main className="min-h-screen">
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="bg-linear-to-r from-red-600 via-red-500 to-orange-500">

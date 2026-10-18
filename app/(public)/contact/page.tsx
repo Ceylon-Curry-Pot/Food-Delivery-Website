@@ -4,7 +4,6 @@ import ContactDetails from '@/components/contact/ContactDetails';
 
 export default function ContactPage() {
   return (
-    <main className="bg-gray-50">
       <section className="relative overflow-hidden pb-20 md:pb-28">
         {/* Hero */}
         <ContactHero />
@@ -15,6 +14,6 @@ export default function ContactPage() {
           <ContactDetails />
         </div>
       </section>
-    </main>
+    
   );
 }

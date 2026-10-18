@@ -44,7 +44,7 @@ export default function LoyaltyPage() {
   const pointsLeft       = member ? getPointsToNext(member.points, member.tier) : 0;
 
   return (
-    <main className="bg-gray-50 min-h-screen">
+    <main className="min-h-screen">
 
       {/* ── HERO ── */}
       <section className="relative overflow-hidden">
