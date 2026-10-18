@@ -26,7 +26,7 @@ export default function MenuHero() {
         </div>
 
         {/* Rounded white bottom */}
-        <div className="absolute left-0 right-0 bottom-0 h-12 bg-white rounded-t-[40px]" />
+        <div className="absolute left-0 right-0 bottom-0 h-12 bg-gray-50 rounded-t-[40px]" />
       </div>
     </section>
   );

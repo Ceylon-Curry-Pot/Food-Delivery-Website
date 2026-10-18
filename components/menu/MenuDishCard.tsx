@@ -26,7 +26,7 @@ export default function MenuDishCard({ id, name, description, price, image, badg
   };
 
   return (
-    <div className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:border-gray-200 transition-all duration-300 hover:-translate-y-1 flex flex-col">
+    <div className="group bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden hover:shadow-xl hover:border-red-200 transition-all duration-300 hover:-translate-y-1 flex flex-col">
 
       {/* Image */}
       <div className="relative h-52 overflow-hidden bg-gray-100">

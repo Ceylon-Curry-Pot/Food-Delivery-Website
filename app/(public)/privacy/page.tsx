@@ -9,7 +9,7 @@ const LAST_UPDATED = 'May 2025';
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="bg-gray-50 min-h-screen">
+    <main className="min-h-screen">
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="bg-gradient-to-r from-red-600 via-red-500 to-orange-500">

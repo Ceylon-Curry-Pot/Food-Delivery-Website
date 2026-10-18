@@ -20,8 +20,8 @@ export default function MenuFilters({
   onCategoryChange,
 }: Props) {
   return (
-    <div className="mt-8 space-y-4">
-      <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm">
+    <div className="mt-8 mb-10 space-y-6">
+      <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3.5 shadow-sm">
         <span className="text-gray-400 text-sm">🔎</span>
         <input
           value={search}

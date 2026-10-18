@@ -21,7 +21,7 @@ export default function FeaturedDishes({ dishes }: Props) {
   return (
     <>
       {/* Featured dishes */}
-      <section id="featured-dishes" className="py-16 md:py-24 bg-white">
+      <section id="featured-dishes" className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader
             tagline="Customer Favorites"

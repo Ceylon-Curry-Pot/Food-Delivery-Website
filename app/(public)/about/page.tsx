@@ -5,13 +5,13 @@ import CTASection from '@/components/about/CTASection';
 
 export default function AboutPage() {
   return (
-    <main className="bg-gray-50">
+    <div>
       <section className="relative overflow-hidden">
         {/* Hero */}
         <AboutHero />
 
         {/* First content block pulled over the curve */}
-        <div className="relative -mt-12 z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative mt-8 md:mt-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SpecialitiesSection />
         </div>
       </section>
@@ -19,6 +19,6 @@ export default function AboutPage() {
       {/* Remaining sections */}
       <PromiseSection />
       <CTASection />
-    </main>
+    </div>
   );
 }
