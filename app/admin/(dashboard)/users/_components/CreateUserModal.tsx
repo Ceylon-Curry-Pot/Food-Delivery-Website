@@ -3,8 +3,11 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ROLES, ROLE_LABEL, canAssignRole, type Role } from "@/lib/permissions";
 
-export default function CreateUserModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+export default function CreateUserModal(
+  { isOpen, onClose, viewerRole }: { isOpen: boolean; onClose: () => void; viewerRole: Role }
+) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -65,14 +68,15 @@ export default function CreateUserModal({ isOpen, onClose }: { isOpen: boolean, 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Temporary Password</label>
-            <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full border rounded-lg p-2 text-gray-900" minLength={6} />
+            <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full border rounded-lg p-2 text-gray-900" minLength={8} />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Global Role</label>
             <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full border rounded-lg p-2 text-gray-900">
-              <option value="staff">Staff</option>
-              <option value="admin">Admin</option>
+              {ROLES.filter((r) => canAssignRole(viewerRole, r)).map((r) => (
+                <option key={r} value={r}>{ROLE_LABEL[r]}</option>
+              ))}
             </select>
           </div>
 

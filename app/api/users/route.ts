@@ -1,63 +1,58 @@
-import { NextResponse } from "next/server";
-import connectToDatabase from "@/lib/mongodb";
-import User from "@/lib/models/User";
-import bcrypt from "bcryptjs";
-import { sanitizeText, sanitizeEmail } from "@/lib/sanitize";
-import { requireAdmin, getAdminSession } from "@/lib/authGuard";
-import { logSecurityEvent } from "@/lib/securityLog";
+import { NextResponse } from 'next/server';
+import connectToDatabase from '@/lib/mongodb';
+import User from '@/lib/models/User';
+import bcrypt from 'bcryptjs';
+import { sanitizeText, sanitizeEmail } from '@/lib/sanitize';
+import { getCurrentAdmin, requirePermission } from '@/lib/authGuard';
+import { can, canAssignRole, isRole, type Role } from '@/lib/permissions';
+import { checkPassword } from '@/lib/passwordPolicy';
+import { logSecurityEvent } from '@/lib/securityLog';
 
-// POST is dual-purpose: the public staff sign-up form (unauthenticated —
-// always lands as unapproved staff, pending admin review) and the admin
-// "create user" modal (authenticated as admin, may set role/approved
-// directly). Which one a given request gets is decided server-side from the
-// session — never from the request body — so an anonymous caller can no
-// longer hand itself `role: "admin", approved: true`.
+// POST serves two callers. Which one you are is decided from the SESSION, never the body:
+//  • an anonymous visitor on the public sign-up form: always an unapproved staff request
+//  • a signed-in admin or super admin: may set the role (up to their own) and approve at once
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const name  = sanitizeText(body.name, 100);
+    const name = sanitizeText(body.name, 100);
     const email = sanitizeEmail(body.email);
     const { password } = body;
 
     if (!name || !email || !password) {
-      return NextResponse.json(
-        { message: "Missing required fields" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
 
-    if (typeof password !== 'string' || password.length < 8) {
-      return NextResponse.json(
-        { message: 'Password must be at least 8 characters' },
-        { status: 400 }
-      );
+    const passwordError = checkPassword(password, name, email);
+    if (passwordError) {
+      return NextResponse.json({ message: passwordError }, { status: 400 });
     }
 
-    if (
-      password.toLowerCase() === String(name).toLowerCase() ||
-      password === String(email).split('@')[0]
-    ) {
-      return NextResponse.json(
-        { message: 'Password is too easy to guess. Please choose a stronger password.' },
-        { status: 400 }
-      );
+    let role: Role = 'staff';
+    let approved = false;
+
+    const admin = await getCurrentAdmin();
+    if (admin) {
+      if (!can(admin.role, 'users:create')) {
+        return NextResponse.json({ message: 'You do not have permission to do this' }, { status: 403 });
+      }
+      role = isRole(body.role) ? body.role : 'staff';
+      if (!canAssignRole(admin.role, role)) {
+        return NextResponse.json(
+          { message: 'You cannot create a user with a higher role than your own' },
+          { status: 403 }
+        );
+      }
+      approved = body.approved === true;
     }
-
-    const adminUser = await getAdminSession();
-
-    const role = adminUser?.role === 'admin' && (body.role === 'admin' || body.role === 'staff')
-      ? body.role
-      : 'staff';
-    const approved = adminUser?.role === 'admin' ? Boolean(body.approved) : false;
 
     await connectToDatabase();
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json({ message: "User already exists" }, { status: 409 });
+      return NextResponse.json({ message: 'User already exists' }, { status: 409 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const newUser = await User.create({
       name,
@@ -65,45 +60,48 @@ export async function POST(req: Request) {
       password: hashedPassword,
       role,
       approved,
-      requestedAt: new Date()
+      approvedAt: approved ? new Date() : undefined,
+      requestedAt: new Date(),
     });
 
-    if (adminUser) {
-      logSecurityEvent('admin_action', { action: 'user_create', actor: adminUser.email, targetEmail: email, role, approved });
+    if (admin) {
+      logSecurityEvent('admin_action', {
+        action: 'user_create', actor: admin.email, targetEmail: email, role, approved,
+      });
     }
 
-    return NextResponse.json({ message: "User created successfully", user: { id: newUser._id, email: newUser.email } }, { status: 201 });
+    return NextResponse.json(
+      { message: 'User created successfully', user: { id: newUser._id, email: newUser.email } },
+      { status: 201 }
+    );
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ message: "Error creating user" }, { status: 500 });
+    return NextResponse.json({ message: 'Error creating user' }, { status: 500 });
   }
 }
 
 export async function GET(req: Request) {
-  const { response } = await requireAdmin(req);
+  const { response } = await requirePermission(req, 'users:view');
   if (response) return response;
 
   try {
     const { searchParams } = new URL(req.url);
-    const count = searchParams.get("count");
-    const approved = searchParams.get("approved");
+    const count = searchParams.get('count');
+    const approved = searchParams.get('approved');
 
     await connectToDatabase();
 
     const query: { approved?: boolean } = {};
-    if (approved !== null) {
-      query.approved = approved === "true";
-    }
+    if (approved !== null) query.approved = approved === 'true';
 
-    if (count === "true") {
-      const total = await User.countDocuments(query);
-      return NextResponse.json({ count: total });
+    if (count === 'true') {
+      return NextResponse.json({ count: await User.countDocuments(query) });
     }
 
     const users = await User.find(query).select('-password').sort({ requestedAt: -1 });
     return NextResponse.json(users);
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ message: "Error fetching users" }, { status: 500 });
+    return NextResponse.json({ message: 'Error fetching users' }, { status: 500 });
   }
 }

@@ -4,6 +4,8 @@ import connectToDatabase from "@/lib/mongodb";
 import MenuItem from "@/lib/models/MenuItem";
 import { getMenuCategories } from "@/lib/menuCategories";
 import MenuGrid from "./_components/MenuGrid";
+import  { getCurrentAdmin } from "@/lib/authGuard";
+import { can } from "@/lib/permissions";
 
 export default async function MenuManagementPage() {
   await connectToDatabase();
@@ -31,6 +33,9 @@ export default async function MenuManagementPage() {
     updatedAt: item.updatedAt?.toISOString(),
   }));
 
+  const admin = await getCurrentAdmin();
+  const canSetPrice: boolean = !!admin && can(admin.role, 'menu:set_price');
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -40,7 +45,7 @@ export default async function MenuManagementPage() {
         </div>
       </div>
       
-      <MenuGrid initialItems={serializedItems} initialCategories={categories} />
+      <MenuGrid initialItems={serializedItems} initialCategories={categories} canSetPrice={canSetPrice} />
     </div>
   );
 }

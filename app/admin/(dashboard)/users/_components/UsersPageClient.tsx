@@ -3,8 +3,9 @@
 import { useState } from "react";
 import CreateUserModal from "./CreateUserModal";
 import { Plus } from "lucide-react";
+import type { Role } from "@/lib/permissions";
 
-export default function UsersPageClient() {
+export default function UsersPageClient({ viewerRole }: { viewerRole: Role }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -14,7 +15,7 @@ export default function UsersPageClient() {
           <h1 className="font-bold text-2xl text-gray-900">User Management</h1>
           <p className="text-sm text-gray-500">View and manage staff accounts</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
           className="bg-brand hover:bg-brand-hover text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition"
         >
@@ -22,7 +23,11 @@ export default function UsersPageClient() {
         </button>
       </div>
 
-      <CreateUserModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <CreateUserModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        viewerRole={viewerRole}
+      />
     </>
   );
 }
