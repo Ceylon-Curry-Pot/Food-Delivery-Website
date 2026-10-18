@@ -16,9 +16,10 @@ type AdminMenuItem = Omit<MenuItemRecord, '_id'> & {
 interface MenuGridProps {
   initialItems: AdminMenuItem[];
   initialCategories: string[];
+  canSetPrice: boolean;
 }
 
-export default function MenuGrid({ initialItems, initialCategories }: MenuGridProps) {
+export default function MenuGrid({ initialItems, initialCategories, canSetPrice }: MenuGridProps) {
   const [items, setItems] = useState(initialItems);
   const [categories, setCategories] = useState(initialCategories);
   const [modalItem, setModalItem] = useState<AdminMenuItem | null>(null);
@@ -94,6 +95,7 @@ export default function MenuGrid({ initialItems, initialCategories }: MenuGridPr
         onClose={() => setIsModalOpen(false)} 
         onSuccess={handleModalSuccess} 
         categories={categories}
+        canSetPrice={canSetPrice}
       />
 
       <EditCategoryModal

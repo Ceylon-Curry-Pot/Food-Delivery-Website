@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
+import { getCurrentAdmin } from "@/lib/authGuard";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import Link from "next/link";
 import { Utensils } from "lucide-react";
@@ -7,8 +7,8 @@ import LoginForm from "@/components/auth/LoginForm";
 
 export default async function AdminLoginPage() {
   // If the HttpOnly JWT cookie exists and is valid, skip login page entirely
-  const session = await getServerSession(authOptions);
-  if (session) {
+  const admin = await getCurrentAdmin();
+  if (admin) {
     redirect('/admin/orders');
   }
 

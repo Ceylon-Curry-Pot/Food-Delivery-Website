@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ClipboardList, UtensilsCrossed, Users } from "lucide-react";
+import { can, type Role } from "@/lib/permissions";
 
 const tabs = [
   { label: 'Orders', href: '/admin/orders', icon: ClipboardList },
@@ -10,16 +11,19 @@ const tabs = [
   { label: 'User Management', href: '/admin/users', icon: Users, badgeKey: 'pendingUsers' },
 ];
 
-export default function TabNav({ pendingUsersCount }: { pendingUsersCount: number }) {
+export default function TabNav({ pendingUsersCount, role }: { pendingUsersCount: number; role: Role }) {
   const pathname = usePathname();
+
+  // Staff don't get the User Management tab.
+  const visibleTabs = tabs.filter((t) => t.href !== '/admin/users' || can(role, 'users:view'));
 
   return (
     <div className="w-full bg-white border-b border-gray-200 shadow-sm">
       <nav className="flex items-center gap-8 px-6 max-w-7xl mx-auto overflow-x-auto no-scrollbar">
-        {tabs.map((tab) => {
+        {visibleTabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
           const Icon = tab.icon;
-          
+
           return (
             <Link
               key={tab.href}

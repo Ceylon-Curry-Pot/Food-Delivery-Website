@@ -3,7 +3,7 @@ import connectToDatabase from '@/lib/mongodb';
 import MenuItem from '@/lib/models/MenuItem';
 import { getR2PublicBaseUrl, uploadToR2 } from '@/lib/r2';
 import { validateImageUpload, buildImageKey, ImageUploadError } from '@/lib/imageUpload';
-import { requireAdmin } from '@/lib/authGuard';
+import { requirePermission } from '@/lib/authGuard';
 import { logSecurityEvent } from '@/lib/securityLog';
 
 export const runtime = 'nodejs';
@@ -31,7 +31,7 @@ export async function GET() {
 
 // POST /api/menu — create new menu item
 export async function POST(req: Request) {
-  const { user, response } = await requireAdmin(req);
+  const { user, response } = await requirePermission(req, 'menu:manage');
   if (response) return response;
 
   try {

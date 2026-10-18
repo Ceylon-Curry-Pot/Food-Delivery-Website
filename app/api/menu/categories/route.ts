@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getMenuCategories, saveMenuCategories } from '@/lib/menuCategories';
-import { requireAdmin } from '@/lib/authGuard';
+import { requirePermission } from '@/lib/authGuard';
 import { logSecurityEvent } from '@/lib/securityLog';
 
 // GET /api/menu/categories — list the persisted menu categories
@@ -16,7 +16,7 @@ export async function GET() {
 
 // POST /api/menu/categories — replace the stored category list
 export async function POST(req: Request) {
-  const { user, response } = await requireAdmin(req);
+  const { user, response } = await requirePermission(req, 'menu:manage');
   if (response) return response;
 
   try {

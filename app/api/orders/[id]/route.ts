@@ -10,7 +10,7 @@ import {
   serializeOrder,
 } from '@/lib/orderData';
 import { revertLoyaltyPointsForOrder } from '@/lib/awardLoyaltyPoints';
-import { requireAdmin } from '@/lib/authGuard';
+import { requirePermission } from '@/lib/authGuard';
 import { logSecurityEvent } from '@/lib/securityLog';
 
 export async function GET(
@@ -41,7 +41,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { user, response } = await requireAdmin(req);
+  const { user, response } = await requirePermission(req, 'orders:manage');
   if (response) return response;
 
   try {

@@ -48,7 +48,7 @@ export default function TermsPage() {
           <PolicySection number="1" title="About Us">
             <p>
               Ceylon Curry Pot is a Sri Lankan restaurant operating a food delivery and
-              pickup service from Liberty Plaza I Food Court, Colombo. We can be reached
+              pickup service from Liberty Plaza Food Court, Colombo. We can be reached
               at{' '}
               <a href="mailto:ceyloncurrypot.lk@gmail.com"
                 className="text-red-600 hover:underline">
@@ -90,10 +90,10 @@ export default function TermsPage() {
             <p>We accept the following payment methods:</p>
             <ul className="list-none space-y-2 mt-3">
               {[
-                'Cash on Delivery (COD) — paid to the delivery rider upon arrival',
-                'Credit / Debit Card — processed securely by PayHere (Visa, Mastercard, AMEX)',
-                'Digital Wallets — eZ Cash, mCash, FriMi, Genie via PayHere',
-                'Internet Banking — Vishwa and other supported banks via PayHere',
+                'Cash on Delivery (COD) - paid to the delivery rider upon arrival',
+                'Credit / Debit Card - processed securely by PayHere (Visa, Mastercard)',
+                'Digital Wallets - eZ Cash, mCash, FriMi, Genie via PayHere',
+                'Internet Banking - Vishwa and other supported banks via PayHere',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-gray-600">
                   <span className="mt-1.5 w-2 h-2 rounded-full bg-red-400 shrink-0" />
@@ -118,7 +118,7 @@ export default function TermsPage() {
                 'Estimated delivery times are provided as a guide only and are not guaranteed. Delivery times may be affected by order volume, weather, or traffic.',
                 'Delivery is available within our supported delivery zone. Orders outside our zone will be cancelled with a full refund.',
                 'Risk of the order passes to you upon delivery or collection from your door.',
-                'If you are not present at the delivery address and cannot be reached, the rider will wait for a reasonable time (up to 5 minutes) then the order will be returned and a refund may not be issued for COD orders.',
+                'If you are not present at the delivery address and cannot be reached, the rider will wait for a reasonable time (up to 5-10 minutes) then the order will be returned and a refund may not be issued for COD orders.',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2.5 text-gray-600">
                   <span className="mt-1.5 w-2 h-2 rounded-full bg-red-400 shrink-0" />
@@ -154,8 +154,8 @@ export default function TermsPage() {
 
           <PolicySection number="8" title="Intellectual Property">
             <p>
-              All content on this website — including the Ceylon Curry Pot logo, images,
-              text, and design — is owned by Ceylon Curry Pot or licensed to us. You may
+              All content on this website - including the Ceylon Curry Pot logo, images,
+              text, and design is owned by Ceylon Curry Pot or licensed to us. You may
               not copy, reproduce, or distribute any content without our written permission.
             </p>
           </PolicySection>

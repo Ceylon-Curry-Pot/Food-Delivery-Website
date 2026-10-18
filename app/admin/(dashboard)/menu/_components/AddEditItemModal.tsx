@@ -16,6 +16,7 @@ interface AddEditItemModalProps {
   onClose: () => void;
   onSuccess: (item: AdminMenuItem, isEdit: boolean, isDelete?: boolean) => void;
   categories: string[];
+  canSetPrice: boolean;
 }
 
 interface FormData {
@@ -34,7 +35,7 @@ const createEmptyForm = (category = ''): FormData => ({
   available:   true,
 });
 
-export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, categories }: AddEditItemModalProps) {
+export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, categories, canSetPrice }: AddEditItemModalProps) {
   const isEdit = !!item;
   const [loading,  setLoading]  = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -211,8 +212,10 @@ export default function AddEditItemModal({ item, isOpen, onClose, onSuccess, cat
                 step="1"
                 value={formData.price}
                 onChange={(e) => set('price', e.target.value)}
+                disabled={isEdit && !canSetPrice}
+                title={isEdit && !canSetPrice ? 'Only admins can change prices' : undefined}
                 placeholder="e.g. 1850"
-                className="w-full border rounded-lg p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400"
+                className="w-full border rounded-lg p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-400/30 focus:border-red-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
               />
             </div>
             <div>
